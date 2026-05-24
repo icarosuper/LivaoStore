@@ -28,7 +28,7 @@ lib/
 
 ## Fluxo do Cliente
 
-1. Acessa `/` — vê produtos com estoque disponível (descontando pedidos pendentes)
+1. Acessa `/` — vê produtos com estoque disponível (`products.quantity` já descontado)
 2. Produtos com `available_stock = 0` exibem botão **"Quero esse item"** em vez de "Adicionar"
 3. Ao clicar: modal pede nome + WhatsApp → salva em `product_interests` via `interests.register`
 4. Adiciona itens ao carrinho — **estado local apenas, sem persistência no banco**
@@ -46,9 +46,10 @@ Produtos cujo estoque aumentou recentemente (campo `stock_restocked_at` atualiza
 2. Aba **Produtos**: listar, criar, editar, ativar/desativar, excluir
    - Ao aumentar `quantity` de um produto → `stock_restocked_at = now()` + exibe lista de interessados
    - Para cada interessado: botão **"Avisar"** abre `wa.me/{whatsapp}?text=...` com mensagem pré-preenchida
-3. Aba **Pedidos**: listar pendentes com itens detalhados
-   - **Confirmar** → `status = 'confirmed'` + subtrai `quantity` dos produtos
-   - **Cancelar** → `status = 'cancelled'` + não altera estoque
+3. Aba **Pedidos**: listar pedidos com itens detalhados
+   - **Marcar como Pago** → `status = 'paid'` (apenas de `pending`)
+   - **Marcar como Entregue** → `status = 'delivered'` (apenas de `paid`)
+   - **Cancelar** → `status = 'cancelled'` + restaura `quantity` dos produtos
 
 ## tRPC Procedures
 
@@ -59,10 +60,9 @@ Produtos cujo estoque aumentou recentemente (campo `stock_restocked_at` atualiza
 | products | `update` | admin | Edita produto existente |
 | products | `toggleActive` | admin | Ativa/desativa produto |
 | products | `delete` | admin | Exclui produto |
-| orders | `create` | public | Cria pedido + itens (snapshot de preço) |
+| orders | `create` | public | Cria pedido + subtrai estoque (transação FOR UPDATE) |
 | orders | `list` | admin | Lista pedidos com itens detalhados |
-| orders | `confirm` | admin | Confirma pedido + desconta estoque |
-| orders | `cancel` | admin | Cancela pedido (sem alterar estoque) |
+| orders | `setStatus` | admin | Muda status; restaura estoque se cancelado |
 | interests | `register` | public | Salva nome + WhatsApp do cliente interessado em produto sem estoque |
 | interests | `listByProduct` | admin | Lista interessados de um produto (para aba de avisos) |
 

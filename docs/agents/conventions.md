@@ -26,7 +26,10 @@
 ## Pedidos
 
 - Snapshot de preço obrigatório em `order_items.unit_price`.
-- Status possíveis: `'pending'` → `'confirmed'` | `'cancelled'`.
+- Status: `pending → paid | cancelled`, `paid → delivered | cancelled`. `delivered` e `cancelled` são finais.
+- Estoque subtraído de `products.quantity` na criação do pedido (transação com `SELECT ... FOR UPDATE`).
+- Estoque restaurado em qualquer cancelamento (`* → cancelled`).
+- Sem expiração automática — admin cancela pedidos abandonados manualmente.
 
 ## Pix
 

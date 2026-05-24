@@ -24,7 +24,7 @@ product_interests                      -- demanda reprimida: clientes que querem
 orders
   id             uuid PK default random()
   created_at     timestamp default now()
-  status         enum('pending', 'confirmed', 'cancelled') default 'pending'
+  status         enum('pending', 'paid', 'delivered', 'cancelled') default 'pending'
   whatsapp       text           -- número do cliente (opcional)
   customer_name  text           -- nome do cliente (opcional)
   total          numeric(10,2) NOT NULL
@@ -37,22 +37,16 @@ order_items
   unit_price     numeric(10,2) NOT NULL  -- snapshot do preço no momento do pedido
 ```
 
-## Regra de Estoque Disponível
+## Regra de Estoque
 
-A vitrine deve exibir o estoque real descontando pedidos pendentes:
+`products.quantity` é o estoque real — já descontado de pedidos ativos.
+Usar `products.quantity` diretamente; sem JOIN de pedidos pendentes.
 
-```sql
-available_stock = products.quantity
-  - COALESCE(SUM(order_items.quantity) WHERE orders.status = 'pending', 0)
-```
+## Regra de Subtração/Restauração de Estoque
 
-Implemente essa lógica na query `products.list`. Evita overselling.
-
-## Regra de Subtração de Estoque
-
-- Estoque só é subtraído **na confirmação do pedido** (procedure `orders.confirm`)
-- Cancelamento **não** altera estoque
-- Nunca subtrair no momento da criação do pedido
+- Subtrair: na **criação do pedido** (`orders.create`), dentro de transação com `SELECT ... FOR UPDATE`
+- Restaurar: em qualquer **cancelamento** (`setStatus → cancelled`)
+- `paid → delivered`: sem efeito no estoque
 
 ## Migrations
 
