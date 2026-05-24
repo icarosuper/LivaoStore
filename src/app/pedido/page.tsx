@@ -14,6 +14,7 @@ export default function PedidoPage() {
 	const router = useRouter();
 	const [items, setItems] = useState<CartItem[]>([]);
 	const [qrUrl, setQrUrl] = useState<string | null>(null);
+	const [confirmed, setConfirmed] = useState(false);
 
 	const createOrder = api.orders.create.useMutation();
 
@@ -24,12 +25,6 @@ export default function PedidoPage() {
 		if (raw) setItems(JSON.parse(raw) as CartItem[]);
 	}, []);
 
-	useEffect(() => {
-		if (total > 0) {
-			generatePixQRCode(total).then(setQrUrl).catch(console.error);
-		}
-	}, [total]);
-
 	if (items.length === 0) {
 		return (
 			<main className="flex min-h-screen flex-col items-center justify-center gap-4 p-8">
@@ -39,7 +34,7 @@ export default function PedidoPage() {
 		);
 	}
 
-	async function handleSend() {
+	async function handleConfirm() {
 		await createOrder.mutateAsync({
 			total: total.toFixed(2),
 			items: items.map((i) => ({
@@ -48,6 +43,12 @@ export default function PedidoPage() {
 				unitPrice: i.price,
 			})),
 		});
+		const url = await generatePixQRCode(total);
+		setQrUrl(url);
+		setConfirmed(true);
+	}
+
+	function handleWhatsApp() {
 		sessionStorage.removeItem("cart");
 		window.open(buildWhatsAppUrl(items, total), "_blank");
 		router.push("/");
@@ -80,20 +81,30 @@ export default function PedidoPage() {
 				<span>R$ {total.toFixed(2).replace(".", ",")}</span>
 			</div>
 
-			{qrUrl && (
-				<div className="mt-6 flex flex-col items-center gap-2">
-					<p className="text-gray-500 text-sm">QR Code Pix</p>
-					<Image alt="QR Code Pix" height={200} src={qrUrl} width={200} />
+			{!confirmed ? (
+				<Button
+					className="mt-8 w-full"
+					disabled={createOrder.isPending}
+					onClick={handleConfirm}
+				>
+					{createOrder.isPending ? "Registrando pedido..." : "Confirmar pedido"}
+				</Button>
+			) : (
+				<div className="mt-8 flex flex-col items-center gap-6">
+					{qrUrl && (
+						<div className="flex flex-col items-center gap-2">
+							<p className="font-medium text-gray-700">QR Code Pix</p>
+							<p className="text-center text-gray-500 text-sm">
+								Escaneie para pagar R$ {total.toFixed(2).replace(".", ",")}
+							</p>
+							<Image alt="QR Code Pix" height={200} src={qrUrl} width={200} />
+						</div>
+					)}
+					<Button className="w-full" onClick={handleWhatsApp}>
+						Enviar pedido pelo WhatsApp
+					</Button>
 				</div>
 			)}
-
-			<Button
-				className="mt-8 w-full"
-				disabled={createOrder.isPending}
-				onClick={handleSend}
-			>
-				{createOrder.isPending ? "Salvando..." : "Enviar pedido pelo WhatsApp"}
-			</Button>
 		</main>
 	);
 }

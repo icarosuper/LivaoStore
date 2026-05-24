@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { count, eq } from "drizzle-orm";
 import { z } from "zod";
 import {
 	adminProcedure,
@@ -23,6 +23,18 @@ export const interestsRouter = createTRPCRouter({
 				.values(input)
 				.returning({ id: productInterests.id });
 			return interest!;
+		}),
+
+	allCounts: adminProcedure
+		.output(
+			z.array(z.object({ productId: z.string().uuid(), count: z.number() })),
+		)
+		.query(async ({ ctx }) => {
+			const rows = await ctx.db
+				.select({ productId: productInterests.productId, count: count() })
+				.from(productInterests)
+				.groupBy(productInterests.productId);
+			return rows.map((r) => ({ productId: r.productId, count: r.count }));
 		}),
 
 	listByProduct: adminProcedure

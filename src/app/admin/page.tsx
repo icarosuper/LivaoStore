@@ -7,9 +7,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 export default function AdminPage() {
 	return (
 		<Tabs defaultValue="products">
-			<TabsList>
-				<TabsTrigger value="products">Produtos</TabsTrigger>
-				<TabsTrigger value="orders">Pedidos</TabsTrigger>
+			<TabsList className="w-full">
+				<TabsTrigger className="flex-1" value="products">
+					Produtos
+				</TabsTrigger>
+				<TabsTrigger className="flex-1" value="orders">
+					Pedidos
+				</TabsTrigger>
 			</TabsList>
 			<TabsContent className="mt-6" value="products">
 				<ProductsTab />

@@ -48,22 +48,8 @@ type ProductRow = {
 
 export function ProductsTab() {
 	const utils = api.useUtils();
-	const { data: products } = api.products.list.useQuery();
-
-	useEffect(() => {
-		const supabase = createSupabaseBrowserClient();
-		const channel = supabase
-			.channel("admin-products")
-			.on("postgres_changes", { event: "*", schema: "public", table: "products" }, () => {
-				void utils.products.list.invalidate();
-			})
-			.on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => {
-				void utils.products.list.invalidate();
-			})
-			.subscribe();
-
-		return () => { void supabase.removeChannel(channel); };
-	}, [utils]);
+	const { data: products } = api.products.adminList.useQuery();
+	const { data: interestCounts } = api.interests.allCounts.useQuery();
 	const [createOpen, setCreateOpen] = useState(false);
 	const [editProduct, setEditProduct] = useState<ProductRow | null>(null);
 	const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -71,24 +57,60 @@ export function ProductsTab() {
 		null,
 	);
 
+	const countMap = Object.fromEntries(
+		interestCounts?.map((c) => [c.productId, c.count]) ?? [],
+	);
+
+	useEffect(() => {
+		const supabase = createSupabaseBrowserClient();
+		const channel = supabase
+			.channel("admin-products")
+			.on(
+				"postgres_changes",
+				{ event: "*", schema: "public", table: "products" },
+				() => {
+					void utils.products.adminList.invalidate();
+				},
+			)
+			.on(
+				"postgres_changes",
+				{ event: "*", schema: "public", table: "orders" },
+				() => {
+					void utils.products.adminList.invalidate();
+				},
+			)
+			.on(
+				"postgres_changes",
+				{ event: "*", schema: "public", table: "product_interests" },
+				() => {
+					void utils.interests.allCounts.invalidate();
+				},
+			)
+			.subscribe();
+
+		return () => {
+			void supabase.removeChannel(channel);
+		};
+	}, [utils]);
+
 	const create = api.products.create.useMutation({
 		onSuccess: () => {
-			void utils.products.list.invalidate();
+			void utils.products.adminList.invalidate();
 			setCreateOpen(false);
 		},
 	});
 	const update = api.products.update.useMutation({
 		onSuccess: () => {
-			void utils.products.list.invalidate();
+			void utils.products.adminList.invalidate();
 			setEditProduct(null);
 		},
 	});
 	const toggle = api.products.toggleActive.useMutation({
-		onSuccess: () => void utils.products.list.invalidate(),
+		onSuccess: () => void utils.products.adminList.invalidate(),
 	});
 	const del = api.products.delete.useMutation({
 		onSuccess: () => {
-			void utils.products.list.invalidate();
+			void utils.products.adminList.invalidate();
 			setDeleteId(null);
 		},
 	});
@@ -116,6 +138,19 @@ export function ProductsTab() {
 		});
 	}
 
+	function InterestButton({ productId }: { productId: string }) {
+		const c = countMap[productId];
+		return (
+			<Button
+				onClick={() => setInterestProductId(productId)}
+				size="sm"
+				variant="outline"
+			>
+				Interessados ({c ?? 0})
+			</Button>
+		);
+	}
+
 	return (
 		<div className="flex flex-col gap-4">
 			<div className="flex items-center justify-between">
@@ -123,64 +158,109 @@ export function ProductsTab() {
 				<Button onClick={() => setCreateOpen(true)}>+ Novo produto</Button>
 			</div>
 
-			<Table>
-				<TableHeader>
-					<TableRow>
-						<TableHead>Nome</TableHead>
-						<TableHead>Preço</TableHead>
-						<TableHead>Estoque</TableHead>
-						<TableHead>Ativo</TableHead>
-						<TableHead>Ações</TableHead>
-					</TableRow>
-				</TableHeader>
-				<TableBody>
-					{products?.map((p) => (
-						<TableRow key={p.id}>
-							<TableCell>{p.name}</TableCell>
-							<TableCell>
-								R$ {parseFloat(p.price).toFixed(2).replace(".", ",")}
-							</TableCell>
-							<TableCell>
-								{p.availableStock}/{p.quantity}
-								{p.availableStock === 0 && (
-									<Badge className="ml-2" variant="destructive">
-										Esgotado
-									</Badge>
-								)}
-							</TableCell>
-							<TableCell>
-								<Switch
-									checked={p.active}
-									onCheckedChange={() => toggle.mutate({ id: p.id })}
-								/>
-							</TableCell>
-							<TableCell className="flex gap-2">
-								<Button
-									onClick={() => setEditProduct(p)}
-									size="sm"
-									variant="outline"
-								>
-									Editar
-								</Button>
-								<Button
-									onClick={() => setInterestProductId(p.id)}
-									size="sm"
-									variant="outline"
-								>
-									Interessados
-								</Button>
-								<Button
-									onClick={() => setDeleteId(p.id)}
-									size="sm"
-									variant="destructive"
-								>
-									Excluir
-								</Button>
-							</TableCell>
+			{/* Mobile cards */}
+			<div className="flex flex-col gap-3 sm:hidden">
+				{products?.map((p) => (
+					<div
+						className="flex flex-col gap-3 rounded-lg border bg-white p-4"
+						key={p.id}
+					>
+						<div className="flex items-start justify-between gap-2">
+							<div>
+								<p className="font-medium">{p.name}</p>
+								<p className="font-bold text-gray-900">
+									R$ {parseFloat(p.price).toFixed(2).replace(".", ",")}
+								</p>
+							</div>
+							<Switch
+								checked={p.active}
+								onCheckedChange={() => toggle.mutate({ id: p.id })}
+							/>
+						</div>
+						<p className="text-sm text-muted-foreground">
+							{p.availableStock}/{p.quantity} disponíveis
+							{p.availableStock === 0 && (
+								<Badge className="ml-2" variant="destructive">
+									Esgotado
+								</Badge>
+							)}
+						</p>
+						<div className="flex flex-wrap gap-2">
+							<Button
+								onClick={() => setEditProduct(p)}
+								size="sm"
+								variant="outline"
+							>
+								Editar
+							</Button>
+							<InterestButton productId={p.id} />
+							<Button
+								onClick={() => setDeleteId(p.id)}
+								size="sm"
+								variant="destructive"
+							>
+								Excluir
+							</Button>
+						</div>
+					</div>
+				))}
+			</div>
+
+			{/* Desktop table */}
+			<div className="hidden sm:block">
+				<Table>
+					<TableHeader>
+						<TableRow>
+							<TableHead>Nome</TableHead>
+							<TableHead>Preço</TableHead>
+							<TableHead>Estoque</TableHead>
+							<TableHead>Ativo</TableHead>
+							<TableHead>Ações</TableHead>
 						</TableRow>
-					))}
-				</TableBody>
-			</Table>
+					</TableHeader>
+					<TableBody>
+						{products?.map((p) => (
+							<TableRow key={p.id}>
+								<TableCell>{p.name}</TableCell>
+								<TableCell>
+									R$ {parseFloat(p.price).toFixed(2).replace(".", ",")}
+								</TableCell>
+								<TableCell>
+									{p.availableStock}/{p.quantity}
+									{p.availableStock === 0 && (
+										<Badge className="ml-2" variant="destructive">
+											Esgotado
+										</Badge>
+									)}
+								</TableCell>
+								<TableCell>
+									<Switch
+										checked={p.active}
+										onCheckedChange={() => toggle.mutate({ id: p.id })}
+									/>
+								</TableCell>
+								<TableCell className="flex gap-2">
+									<Button
+										onClick={() => setEditProduct(p)}
+										size="sm"
+										variant="outline"
+									>
+										Editar
+									</Button>
+									<InterestButton productId={p.id} />
+									<Button
+										onClick={() => setDeleteId(p.id)}
+										size="sm"
+										variant="destructive"
+									>
+										Excluir
+									</Button>
+								</TableCell>
+							</TableRow>
+						))}
+					</TableBody>
+				</Table>
+			</div>
 
 			<Dialog onOpenChange={setCreateOpen} open={createOpen}>
 				<DialogContent>

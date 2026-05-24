@@ -35,6 +35,7 @@ pnpm start        # rodar build de produção localmente
 pnpm db:generate  # gera migration a partir do schema
 pnpm db:migrate   # aplica migrations pendentes
 pnpm db:push      # push direto (dev only, sem migration file)
+pnpm db:seed      # popula DB com dados de teste (limpa antes de inserir)
 ```
 
 > Projeto gerado com `create-t3-app` — os scripts exatos podem variar. Verificar `package.json` para os nomes reais.

@@ -52,6 +52,49 @@ export const productsRouter = createTRPCRouter({
 			}));
 		}),
 
+	adminList: adminProcedure
+		.output(
+			z.array(
+				z.object({
+					id: z.string().uuid(),
+					name: z.string(),
+					description: z.string().nullable(),
+					price: z.string(),
+					quantity: z.number(),
+					availableStock: z.number(),
+					imageUrl: z.string().nullable(),
+					active: z.boolean(),
+					stockRestockedAt: z.date().nullable(),
+				}),
+			),
+		)
+		.query(async ({ ctx }) => {
+			const rows = await ctx.db
+				.select({
+					id: products.id,
+					name: products.name,
+					description: products.description,
+					price: products.price,
+					quantity: products.quantity,
+					imageUrl: products.imageUrl,
+					active: products.active,
+					stockRestockedAt: products.stockRestockedAt,
+					pendingQty:
+						sql<number>`COALESCE(SUM(CASE WHEN ${orders.status} = 'pending' THEN ${orderItems.quantity} ELSE 0 END), 0)`.as(
+							"pending_qty",
+						),
+				})
+				.from(products)
+				.leftJoin(orderItems, eq(orderItems.productId, products.id))
+				.leftJoin(orders, eq(orders.id, orderItems.orderId))
+				.groupBy(products.id);
+
+			return rows.map((r) => ({
+				...r,
+				availableStock: Math.max(0, r.quantity - Number(r.pendingQty)),
+			}));
+		}),
+
 	create: adminProcedure
 		.input(
 			z.object({
