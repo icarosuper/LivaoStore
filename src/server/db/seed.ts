@@ -69,7 +69,8 @@ async function seed() {
 			},
 			{
 				name: "Churros Recheado",
-				description: "Churros artesanal com recheio de doce de leite e açúcar canela.",
+				description:
+					"Churros artesanal com recheio de doce de leite e açúcar canela.",
 				price: "6.00",
 				quantity: 20,
 				active: true,
@@ -94,7 +95,8 @@ async function seed() {
 			},
 			{
 				name: "Brigadeiro Gourmet de Pistache",
-				description: "Brigadeiro premium com pasta de pistache importada e granulado dourado.",
+				description:
+					"Brigadeiro premium com pasta de pistache importada e granulado dourado.",
 				price: "9.00",
 				quantity: 0,
 				active: true,
@@ -109,7 +111,8 @@ async function seed() {
 			},
 			{
 				name: "Beijinho Gourmet de Coco",
-				description: "Versão gourmet com coco fresco ralado na hora e cream cheese.",
+				description:
+					"Versão gourmet com coco fresco ralado na hora e cream cheese.",
 				price: "5.50",
 				quantity: 20,
 				active: true,
@@ -118,45 +121,44 @@ async function seed() {
 		.returning();
 
 	console.log("Inserting orders...");
-	const [orderPending1, orderPending2, orderConfirmed, orderCancelled] =
-		await db
-			.insert(schema.orders)
-			.values([
-				{
-					status: "pending",
-					customerName: "Ana Clara",
-					whatsapp: "5531987654321",
-					total: "28.00",
-					createdAt: fiveHoursAgo,
-				},
-				{
-					status: "pending",
-					customerName: "Bruno Ferreira",
-					whatsapp: "5511991234567",
-					total: "54.50",
-					createdAt: now,
-				},
-				{
-					status: "confirmed",
-					customerName: "Carla Mendes",
-					whatsapp: "5521976543210",
-					total: "46.00",
-					createdAt: yesterday,
-				},
-				{
-					status: "cancelled",
-					customerName: "Diego Santos",
-					whatsapp: "5541988887777",
-					total: "17.50",
-					createdAt: twoDaysAgo,
-				},
-			])
-			.returning();
+	const [orderPending1, orderPending2, orderPaid, orderCancelled] = await db
+		.insert(schema.orders)
+		.values([
+			{
+				status: "pending",
+				customerName: "Ana Clara",
+				whatsapp: "5531987654321",
+				total: "28.00",
+				createdAt: fiveHoursAgo,
+			},
+			{
+				status: "pending",
+				customerName: "Bruno Ferreira",
+				whatsapp: "5511991234567",
+				total: "54.50",
+				createdAt: now,
+			},
+			{
+				status: "paid",
+				customerName: "Carla Mendes",
+				whatsapp: "5521976543210",
+				total: "46.00",
+				createdAt: yesterday,
+			},
+			{
+				status: "cancelled",
+				customerName: "Diego Santos",
+				whatsapp: "5541988887777",
+				total: "17.50",
+				createdAt: twoDaysAgo,
+			},
+		])
+		.returning();
 
 	if (
 		!orderPending1 ||
 		!orderPending2 ||
-		!orderConfirmed ||
+		!orderPaid ||
 		!orderCancelled ||
 		!brigadeiro ||
 		!brigadeirOreo ||
@@ -208,19 +210,19 @@ async function seed() {
 		},
 		// confirmed order: Carla Mendes
 		{
-			orderId: orderConfirmed.id,
+			orderId: orderPaid.id,
 			productId: paoDeMel.id,
 			quantity: 3,
 			unitPrice: paoDeMel.price,
 		},
 		{
-			orderId: orderConfirmed.id,
+			orderId: orderPaid.id,
 			productId: beijinho.id,
 			quantity: 5,
 			unitPrice: beijinho.price,
 		},
 		{
-			orderId: orderConfirmed.id,
+			orderId: orderPaid.id,
 			productId: cocogourmet.id,
 			quantity: 2,
 			unitPrice: cocogourmet.price,
@@ -257,7 +259,7 @@ async function seed() {
 
 	console.log("Seed complete.");
 	console.log(`  Products: 10 (1 sem estoque, 1 recém-reposto)`);
-	console.log(`  Orders: 4 (2 pending, 1 confirmed, 1 cancelled)`);
+	console.log(`  Orders: 4 (2 pending, 1 paid, 1 cancelled)`);
 	console.log(`  Product interests: 3 (Pistache)`);
 }
 

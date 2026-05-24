@@ -1,6 +1,6 @@
 {
-	"id": "85cf399e-0b15-4929-a824-1f4d4ab20ab1",
-	"prevId": "00000000-0000-0000-0000-000000000000",
+	"id": "b565f052-0839-4272-9016-f4aca044d2fe",
+	"prevId": "85cf399e-0b15-4929-a824-1f4d4ab20ab1",
 	"version": "7",
 	"dialect": "postgresql",
 	"tables": {
@@ -251,7 +251,7 @@
 		"public.order_status": {
 			"name": "order_status",
 			"schema": "public",
-			"values": ["pending", "confirmed", "cancelled"]
+			"values": ["pending", "paid", "delivered", "cancelled"]
 		}
 	},
 	"schemas": {},

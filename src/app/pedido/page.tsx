@@ -15,6 +15,7 @@ export default function PedidoPage() {
 	const [items, setItems] = useState<CartItem[]>([]);
 	const [qrUrl, setQrUrl] = useState<string | null>(null);
 	const [confirmed, setConfirmed] = useState(false);
+	const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
 	const createOrder = api.orders.create.useMutation();
 
@@ -35,17 +36,26 @@ export default function PedidoPage() {
 	}
 
 	async function handleConfirm() {
-		await createOrder.mutateAsync({
-			total: total.toFixed(2),
-			items: items.map((i) => ({
-				productId: i.productId,
-				quantity: i.quantity,
-				unitPrice: i.price,
-			})),
-		});
-		const url = await generatePixQRCode(total);
-		setQrUrl(url);
-		setConfirmed(true);
+		setErrorMsg(null);
+		try {
+			await createOrder.mutateAsync({
+				total: total.toFixed(2),
+				items: items.map((i) => ({
+					productId: i.productId,
+					quantity: i.quantity,
+					unitPrice: i.price,
+				})),
+			});
+			const url = await generatePixQRCode(total);
+			setQrUrl(url);
+			setConfirmed(true);
+		} catch (err) {
+			const msg =
+				err instanceof Error
+					? err.message
+					: "Erro ao registrar pedido. Tente novamente.";
+			setErrorMsg(msg);
+		}
 	}
 
 	function handleWhatsApp() {
@@ -82,13 +92,22 @@ export default function PedidoPage() {
 			</div>
 
 			{!confirmed ? (
-				<Button
-					className="mt-8 w-full"
-					disabled={createOrder.isPending}
-					onClick={handleConfirm}
-				>
-					{createOrder.isPending ? "Registrando pedido..." : "Confirmar pedido"}
-				</Button>
+				<>
+					{errorMsg && (
+						<p className="mt-4 rounded border border-red-300 bg-red-50 p-3 text-red-700 text-sm">
+							{errorMsg}
+						</p>
+					)}
+					<Button
+						className="mt-8 w-full"
+						disabled={createOrder.isPending}
+						onClick={handleConfirm}
+					>
+						{createOrder.isPending
+							? "Registrando pedido..."
+							: "Confirmar pedido"}
+					</Button>
+				</>
 			) : (
 				<div className="mt-8 flex flex-col items-center gap-6">
 					{qrUrl && (

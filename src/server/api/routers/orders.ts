@@ -1,11 +1,12 @@
-import { eq, sql } from "drizzle-orm";
+import { TRPCError } from "@trpc/server";
+import { eq, inArray, sql } from "drizzle-orm";
 import { z } from "zod";
 import {
 	adminProcedure,
 	createTRPCRouter,
 	publicProcedure,
 } from "~/server/api/trpc";
-import { orderItems, orders } from "~/server/db/schema";
+import { orderItems, orders, products } from "~/server/db/schema";
 
 const orderItemSchema = z.object({
 	productId: z.string().uuid(),
@@ -25,26 +26,58 @@ export const ordersRouter = createTRPCRouter({
 		)
 		.output(z.object({ id: z.string().uuid() }))
 		.mutation(async ({ ctx, input }) => {
-			const [order] = await ctx.db
-				.insert(orders)
-				.values({
-					customerName: input.customerName ?? null,
-					whatsapp: input.whatsapp ?? null,
-					total: input.total,
-					status: "pending",
-				})
-				.returning({ id: orders.id });
+			return ctx.db.transaction(async (tx) => {
+				const productIds = input.items.map((i) => i.productId);
 
-			await ctx.db.insert(orderItems).values(
-				input.items.map((item) => ({
-					orderId: order!.id,
-					productId: item.productId,
-					quantity: item.quantity,
-					unitPrice: item.unitPrice,
-				})),
-			);
+				// Lock rows to prevent concurrent overselling
+				const productRows = await tx
+					.select({
+						id: products.id,
+						name: products.name,
+						quantity: products.quantity,
+					})
+					.from(products)
+					.where(inArray(products.id, productIds))
+					.for("update");
 
-			return order!;
+				for (const item of input.items) {
+					const product = productRows.find((p) => p.id === item.productId);
+					if (!product || product.quantity < item.quantity) {
+						throw new TRPCError({
+							code: "BAD_REQUEST",
+							message: `Estoque insuficiente para ${product?.name ?? "produto"}`,
+						});
+					}
+				}
+
+				for (const item of input.items) {
+					await tx
+						.update(products)
+						.set({ quantity: sql`quantity - ${item.quantity}` })
+						.where(eq(products.id, item.productId));
+				}
+
+				const [order] = await tx
+					.insert(orders)
+					.values({
+						customerName: input.customerName ?? null,
+						whatsapp: input.whatsapp ?? null,
+						total: input.total,
+						status: "pending",
+					})
+					.returning({ id: orders.id });
+
+				await tx.insert(orderItems).values(
+					input.items.map((item) => ({
+						orderId: order!.id,
+						productId: item.productId,
+						quantity: item.quantity,
+						unitPrice: item.unitPrice,
+					})),
+				);
+
+				return order!;
+			});
 		}),
 
 	list: adminProcedure
@@ -53,7 +86,7 @@ export const ordersRouter = createTRPCRouter({
 				z.object({
 					id: z.string().uuid(),
 					createdAt: z.date().nullable(),
-					status: z.enum(["pending", "confirmed", "cancelled"]),
+					status: z.enum(["pending", "paid", "delivered", "cancelled"]),
 					customerName: z.string().nullable(),
 					whatsapp: z.string().nullable(),
 					total: z.string(),
@@ -96,36 +129,58 @@ export const ordersRouter = createTRPCRouter({
 			}));
 		}),
 
-	confirm: adminProcedure
-		.input(z.object({ id: z.string().uuid() }))
+	setStatus: adminProcedure
+		.input(
+			z.object({
+				id: z.string().uuid(),
+				status: z.enum(["paid", "delivered", "cancelled"]),
+			}),
+		)
 		.output(z.object({ id: z.string().uuid() }))
 		.mutation(async ({ ctx, input }) => {
-			await ctx.db
-				.update(orders)
-				.set({ status: "confirmed" })
-				.where(eq(orders.id, input.id));
+			return ctx.db.transaction(async (tx) => {
+				const order = await tx.query.orders.findFirst({
+					where: eq(orders.id, input.id),
+					with: { items: true },
+				});
 
-			const items = await ctx.db.query.orderItems.findMany({
-				where: eq(orderItems.orderId, input.id),
+				if (!order) {
+					throw new TRPCError({
+						code: "NOT_FOUND",
+						message: "Pedido não encontrado",
+					});
+				}
+
+				if (order.status === "cancelled" || order.status === "delivered") {
+					throw new TRPCError({
+						code: "BAD_REQUEST",
+						message: "Pedido já finalizado e não pode ser alterado",
+					});
+				}
+
+				if (input.status === "delivered" && order.status !== "paid") {
+					throw new TRPCError({
+						code: "BAD_REQUEST",
+						message:
+							"Pedido precisa estar pago antes de ser marcado como entregue",
+					});
+				}
+
+				if (input.status === "cancelled") {
+					for (const item of order.items) {
+						await tx
+							.update(products)
+							.set({ quantity: sql`quantity + ${item.quantity}` })
+							.where(eq(products.id, item.productId));
+					}
+				}
+
+				await tx
+					.update(orders)
+					.set({ status: input.status })
+					.where(eq(orders.id, input.id));
+
+				return { id: input.id };
 			});
-
-			for (const item of items) {
-				await ctx.db.execute(
-					sql`UPDATE products SET quantity = GREATEST(0, quantity - ${item.quantity}) WHERE id = ${item.productId}`,
-				);
-			}
-
-			return { id: input.id };
-		}),
-
-	cancel: adminProcedure
-		.input(z.object({ id: z.string().uuid() }))
-		.output(z.object({ id: z.string().uuid() }))
-		.mutation(async ({ ctx, input }) => {
-			await ctx.db
-				.update(orders)
-				.set({ status: "cancelled" })
-				.where(eq(orders.id, input.id));
-			return { id: input.id };
 		}),
 });

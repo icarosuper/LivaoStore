@@ -16,15 +16,25 @@ export default function HomePage() {
 		const supabase = createSupabaseBrowserClient();
 		const channel = supabase
 			.channel("store-products")
-			.on("postgres_changes", { event: "*", schema: "public", table: "products" }, () => {
-				void utils.products.list.invalidate();
-			})
-			.on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => {
-				void utils.products.list.invalidate();
-			})
+			.on(
+				"postgres_changes",
+				{ event: "*", schema: "public", table: "products" },
+				() => {
+					void utils.products.list.invalidate();
+				},
+			)
+			.on(
+				"postgres_changes",
+				{ event: "*", schema: "public", table: "orders" },
+				() => {
+					void utils.products.list.invalidate();
+				},
+			)
 			.subscribe();
 
-		return () => { void supabase.removeChannel(channel); };
+		return () => {
+			void supabase.removeChannel(channel);
+		};
 	}, [utils]);
 
 	if (isLoading) {

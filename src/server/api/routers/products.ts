@@ -1,11 +1,11 @@
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { z } from "zod";
 import {
 	adminProcedure,
 	createTRPCRouter,
 	publicProcedure,
 } from "~/server/api/trpc";
-import { orderItems, orders, products } from "~/server/db/schema";
+import { products } from "~/server/db/schema";
 
 export const productsRouter = createTRPCRouter({
 	list: publicProcedure
@@ -35,21 +35,11 @@ export const productsRouter = createTRPCRouter({
 					imageUrl: products.imageUrl,
 					active: products.active,
 					stockRestockedAt: products.stockRestockedAt,
-					pendingQty:
-						sql<number>`COALESCE(SUM(CASE WHEN ${orders.status} = 'pending' THEN ${orderItems.quantity} ELSE 0 END), 0)`.as(
-							"pending_qty",
-						),
 				})
 				.from(products)
-				.leftJoin(orderItems, eq(orderItems.productId, products.id))
-				.leftJoin(orders, eq(orders.id, orderItems.orderId))
-				.where(eq(products.active, true))
-				.groupBy(products.id);
+				.where(eq(products.active, true));
 
-			return rows.map((r) => ({
-				...r,
-				availableStock: Math.max(0, r.quantity - Number(r.pendingQty)),
-			}));
+			return rows.map((r) => ({ ...r, availableStock: r.quantity }));
 		}),
 
 	adminList: adminProcedure
@@ -79,20 +69,10 @@ export const productsRouter = createTRPCRouter({
 					imageUrl: products.imageUrl,
 					active: products.active,
 					stockRestockedAt: products.stockRestockedAt,
-					pendingQty:
-						sql<number>`COALESCE(SUM(CASE WHEN ${orders.status} = 'pending' THEN ${orderItems.quantity} ELSE 0 END), 0)`.as(
-							"pending_qty",
-						),
 				})
-				.from(products)
-				.leftJoin(orderItems, eq(orderItems.productId, products.id))
-				.leftJoin(orders, eq(orders.id, orderItems.orderId))
-				.groupBy(products.id);
+				.from(products);
 
-			return rows.map((r) => ({
-				...r,
-				availableStock: Math.max(0, r.quantity - Number(r.pendingQty)),
-			}));
+			return rows.map((r) => ({ ...r, availableStock: r.quantity }));
 		}),
 
 	create: adminProcedure

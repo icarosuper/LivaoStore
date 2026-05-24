@@ -12,7 +12,8 @@ import {
 
 export const orderStatusEnum = pgEnum("order_status", [
 	"pending",
-	"confirmed",
+	"paid",
+	"delivered",
 	"cancelled",
 ]);
 

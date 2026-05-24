@@ -50,7 +50,9 @@ export function ProductCard({ product, onAddToCart }: Props) {
 					</div>
 				)}
 				<div className="flex flex-1 flex-col gap-2 p-4">
-					<h3 className="font-semibold text-gray-900 text-lg">{product.name}</h3>
+					<h3 className="font-semibold text-gray-900 text-lg">
+						{product.name}
+					</h3>
 					{product.description && (
 						<p className="text-gray-500 text-sm">{product.description}</p>
 					)}
@@ -59,7 +61,10 @@ export function ProductCard({ product, onAddToCart }: Props) {
 					</p>
 					{product.availableStock >= 1 && product.availableStock <= 5 ? (
 						<span className="inline-flex items-center gap-1 self-start rounded-full border border-orange-400 bg-orange-100 px-3 py-1 font-semibold text-orange-700 text-sm">
-							🔥 {product.availableStock === 1 ? "Último disponível!" : `Corra! Apenas ${product.availableStock} disponíveis`}
+							🔥{" "}
+							{product.availableStock === 1
+								? "Último disponível!"
+								: `Corra! Apenas ${product.availableStock} disponíveis`}
 						</span>
 					) : product.availableStock > 5 ? (
 						<span className="inline-flex items-center gap-1 self-start rounded-full bg-green-100 px-3 py-1 font-medium text-green-700 text-sm">

@@ -16,16 +16,20 @@ import { api } from "~/trpc/react";
 
 const statusLabel: Record<string, string> = {
 	pending: "Pendente",
-	confirmed: "Confirmado",
+	paid: "Pago",
+	delivered: "Entregue",
 	cancelled: "Cancelado",
 };
 
-const statusVariant: Record<string, "default" | "secondary" | "destructive"> =
-	{
-		pending: "secondary",
-		confirmed: "default",
-		cancelled: "destructive",
-	};
+const statusVariant: Record<
+	string,
+	"default" | "secondary" | "destructive" | "outline"
+> = {
+	pending: "secondary",
+	paid: "default",
+	delivered: "outline",
+	cancelled: "destructive",
+};
 
 export function OrdersTab() {
 	const utils = api.useUtils();
@@ -49,10 +53,7 @@ export function OrdersTab() {
 		};
 	}, [utils]);
 
-	const confirm = api.orders.confirm.useMutation({
-		onSuccess: () => void utils.orders.list.invalidate(),
-	});
-	const cancel = api.orders.cancel.useMutation({
+	const setStatus = api.orders.setStatus.useMutation({
 		onSuccess: () => void utils.orders.list.invalidate(),
 	});
 
@@ -80,26 +81,44 @@ export function OrdersTab() {
 								{statusLabel[o.status]}
 							</Badge>
 						</div>
-						<p className="text-sm text-muted-foreground">
+						<p className="text-muted-foreground text-sm">
 							{o.items.map((i) => `${i.quantity}x ${i.productName}`).join(", ")}
 						</p>
 						<p className="font-bold">
 							R$ {parseFloat(o.total).toFixed(2).replace(".", ",")}
 						</p>
-						{o.status === "pending" && (
+						{(o.status === "pending" || o.status === "paid") && (
 							<div className="flex gap-2">
+								{o.status === "pending" && (
+									<Button
+										className="flex-1"
+										disabled={setStatus.isPending}
+										onClick={() =>
+											setStatus.mutate({ id: o.id, status: "paid" })
+										}
+										size="sm"
+									>
+										Marcar como Pago
+									</Button>
+								)}
+								{o.status === "paid" && (
+									<Button
+										className="flex-1"
+										disabled={setStatus.isPending}
+										onClick={() =>
+											setStatus.mutate({ id: o.id, status: "delivered" })
+										}
+										size="sm"
+									>
+										Marcar como Entregue
+									</Button>
+								)}
 								<Button
 									className="flex-1"
-									disabled={confirm.isPending}
-									onClick={() => confirm.mutate({ id: o.id })}
-									size="sm"
-								>
-									Confirmar
-								</Button>
-								<Button
-									className="flex-1"
-									disabled={cancel.isPending}
-									onClick={() => cancel.mutate({ id: o.id })}
+									disabled={setStatus.isPending}
+									onClick={() =>
+										setStatus.mutate({ id: o.id, status: "cancelled" })
+									}
 									size="sm"
 									variant="destructive"
 								>
@@ -152,24 +171,44 @@ export function OrdersTab() {
 									</Badge>
 								</TableCell>
 								<TableCell className="flex gap-2">
-									{o.status === "pending" && (
-										<>
+									{(o.status === "pending" || o.status === "paid") && (
+										<div className="flex gap-2">
+											{o.status === "pending" && (
+												<Button
+													className="flex-1"
+													disabled={setStatus.isPending}
+													onClick={() =>
+														setStatus.mutate({ id: o.id, status: "paid" })
+													}
+													size="sm"
+												>
+													Marcar como Pago
+												</Button>
+											)}
+											{o.status === "paid" && (
+												<Button
+													className="flex-1"
+													disabled={setStatus.isPending}
+													onClick={() =>
+														setStatus.mutate({ id: o.id, status: "delivered" })
+													}
+													size="sm"
+												>
+													Marcar como Entregue
+												</Button>
+											)}
 											<Button
-												disabled={confirm.isPending}
-												onClick={() => confirm.mutate({ id: o.id })}
-												size="sm"
-											>
-												Confirmar
-											</Button>
-											<Button
-												disabled={cancel.isPending}
-												onClick={() => cancel.mutate({ id: o.id })}
+												className="flex-1"
+												disabled={setStatus.isPending}
+												onClick={() =>
+													setStatus.mutate({ id: o.id, status: "cancelled" })
+												}
 												size="sm"
 												variant="destructive"
 											>
 												Cancelar
 											</Button>
-										</>
+										</div>
 									)}
 								</TableCell>
 							</TableRow>

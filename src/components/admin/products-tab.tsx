@@ -177,7 +177,7 @@ export function ProductsTab() {
 								onCheckedChange={() => toggle.mutate({ id: p.id })}
 							/>
 						</div>
-						<p className="text-sm text-muted-foreground">
+						<p className="text-muted-foreground text-sm">
 							{p.availableStock}/{p.quantity} disponíveis
 							{p.availableStock === 0 && (
 								<Badge className="ml-2" variant="destructive">
