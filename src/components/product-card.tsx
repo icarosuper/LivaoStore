@@ -56,21 +56,23 @@ export function ProductCard({ product, onAddToCart }: Props) {
 					{product.description && (
 						<p className="text-gray-500 text-sm">{product.description}</p>
 					)}
-					<p className="mt-auto font-bold text-2xl text-gray-900">
-						R$ {parseFloat(product.price).toFixed(2).replace(".", ",")}
-					</p>
-					{product.availableStock >= 1 && product.availableStock <= 5 ? (
-						<span className="inline-flex items-center gap-1 self-start rounded-full border border-orange-400 bg-orange-100 px-3 py-1 font-semibold text-orange-700 text-sm">
-							🔥{" "}
-							{product.availableStock === 1
-								? "Último disponível!"
-								: `Corra! Apenas ${product.availableStock} disponíveis`}
-						</span>
-					) : product.availableStock > 5 ? (
-						<span className="inline-flex items-center gap-1 self-start rounded-full bg-green-100 px-3 py-1 font-medium text-green-700 text-sm">
-							✓ {product.availableStock} disponíveis
-						</span>
-					) : null}
+          <div className="flex justify-between">
+            <p className="mt-auto font-bold text-2xl text-gray-900">
+  						R$ {parseFloat(product.price).toFixed(2).replace(".", ",")}
+  					</p>
+  					{product.availableStock >= 1 && product.availableStock <= 5 ? (
+  						<span className="inline-flex items-center gap-1 rounded-full border border-orange-400 bg-orange-100 px-3 py-1 font-semibold text-orange-700 text-sm">
+  							🔥{" "}
+  							{product.availableStock === 1
+  								? "Último disponível!"
+  								: `Corra! Apenas ${product.availableStock} disponíveis`}
+  						</span>
+  					) : product.availableStock > 5 ? (
+  						<span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 font-medium text-green-700 text-sm">
+  							✓ {product.availableStock} disponíveis
+  						</span>
+  					) : null}
+					</div>
 					{product.availableStock > 0 ? (
 						<Button
 							onClick={() =>

@@ -59,8 +59,11 @@ export default function PedidoPage() {
 	}
 
 	function handleWhatsApp() {
-		sessionStorage.removeItem("cart");
 		window.open(buildWhatsAppUrl(items, total), "_blank");
+	}
+
+	function handleFinish() {
+		sessionStorage.removeItem("cart");
 		router.push("/");
 	}
 
@@ -119,9 +122,18 @@ export default function PedidoPage() {
 							<Image alt="QR Code Pix" height={200} src={qrUrl} width={200} />
 						</div>
 					)}
-					<Button className="w-full" onClick={handleWhatsApp}>
-						Enviar pedido pelo WhatsApp
-					</Button>
+
+					<div className="flex w-full flex-col gap-3">
+						<p className="text-center text-gray-500 text-sm">
+							Entre em contato para garantir seu pedido
+						</p>
+						<Button className="w-full" onClick={handleWhatsApp}>
+							Enviar pedido pelo WhatsApp
+						</Button>
+						<Button className="w-full" onClick={handleFinish} variant="outline">
+							Concluir pedido
+						</Button>
+					</div>
 				</div>
 			)}
 		</main>

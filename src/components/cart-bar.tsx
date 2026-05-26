@@ -16,8 +16,8 @@ export function CartBar({ items, total }: Props) {
 	if (count === 0) return null;
 
 	return (
-		<div className="fixed right-0 bottom-0 left-0 flex items-center justify-between border-t bg-white p-4 shadow-lg">
-			<span className="font-medium text-sm">
+		<div className="fixed right-0 bottom-0 left-0 z-40 flex items-center justify-between border-t bg-white px-4 py-5 pr-24 shadow-xl">
+			<span className="font-semibold">
 				{count} {count === 1 ? "item" : "itens"} —{" "}
 				<strong>R$ {total.toFixed(2).replace(".", ",")}</strong>
 			</span>
@@ -28,6 +28,7 @@ export function CartBar({ items, total }: Props) {
 					}
 					router.push("/pedido");
 				}}
+				size="lg"
 			>
 				Ver pedido
 			</Button>

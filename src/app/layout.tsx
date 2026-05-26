@@ -3,6 +3,7 @@ import "~/styles/globals.css";
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 
+import { WhatsAppFab } from "~/components/whatsapp-fab";
 import { TRPCReactProvider } from "~/trpc/react";
 
 export const metadata: Metadata = {
@@ -22,7 +23,10 @@ export default function RootLayout({
 	return (
 		<html className={`${geist.variable}`} lang="en">
 			<body suppressHydrationWarning>
-				<TRPCReactProvider>{children}</TRPCReactProvider>
+				<TRPCReactProvider>
+					{children}
+					<WhatsAppFab />
+				</TRPCReactProvider>
 			</body>
 		</html>
 	);

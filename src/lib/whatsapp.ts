@@ -6,7 +6,7 @@ export function buildWhatsAppUrl(items: CartItem[], total: number): string {
 	const lines = items
 		.map(
 			(i) =>
-				`• ${i.quantity}x ${i.name} — R$ ${(parseFloat(i.price) * i.quantity).toFixed(2).replace(".", ",")}`,
+				`• ${i.quantity}x ${i.name}`,
 		)
 		.join("\n");
 
@@ -16,8 +16,6 @@ export function buildWhatsAppUrl(items: CartItem[], total: number): string {
 		lines,
 		"",
 		`Total: R$ ${total.toFixed(2).replace(".", ",")}`,
-		"",
-		"Vou pagar via Pix!",
 	].join("\n");
 
 	return `https://wa.me/${number}?text=${encodeURIComponent(message)}`;

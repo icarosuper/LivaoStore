@@ -1,5 +1,6 @@
 "use client";
 
+import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
 	ProductForm,
@@ -56,6 +57,7 @@ export function ProductsTab() {
 	const [interestProductId, setInterestProductId] = useState<string | null>(
 		null,
 	);
+	const [togglingId, setTogglingId] = useState<string | null>(null);
 
 	const countMap = Object.fromEntries(
 		interestCounts?.map((c) => [c.productId, c.count]) ?? [],
@@ -107,7 +109,13 @@ export function ProductsTab() {
 	});
 	const toggle = api.products.toggleActive.useMutation({
 		onSuccess: () => void utils.products.adminList.invalidate(),
+		onSettled: () => setTogglingId(null),
 	});
+
+	function handleToggle(id: string) {
+		setTogglingId(id);
+		toggle.mutate({ id });
+	}
 	const del = api.products.delete.useMutation({
 		onSuccess: () => {
 			void utils.products.adminList.invalidate();
@@ -116,7 +124,7 @@ export function ProductsTab() {
 	});
 
 	const { data: interests } = api.interests.listByProduct.useQuery(
-		{ productId: interestProductId! },
+		{ productId: interestProductId ?? "" },
 		{ enabled: !!interestProductId },
 	);
 
@@ -172,10 +180,14 @@ export function ProductsTab() {
 									R$ {parseFloat(p.price).toFixed(2).replace(".", ",")}
 								</p>
 							</div>
-							<Switch
-								checked={p.active}
-								onCheckedChange={() => toggle.mutate({ id: p.id })}
-							/>
+							{togglingId === p.id ? (
+								<Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+							) : (
+								<Switch
+									checked={p.active}
+									onCheckedChange={() => handleToggle(p.id)}
+								/>
+							)}
 						</div>
 						<p className="text-muted-foreground text-sm">
 							{p.availableStock}/{p.quantity} disponíveis
@@ -234,10 +246,14 @@ export function ProductsTab() {
 									)}
 								</TableCell>
 								<TableCell>
-									<Switch
-										checked={p.active}
-										onCheckedChange={() => toggle.mutate({ id: p.id })}
-									/>
+									{togglingId === p.id ? (
+										<Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+									) : (
+										<Switch
+											checked={p.active}
+											onCheckedChange={() => handleToggle(p.id)}
+										/>
+									)}
 								</TableCell>
 								<TableCell className="flex gap-2">
 									<Button
