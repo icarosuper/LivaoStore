@@ -30,11 +30,3 @@ export function isValidBrazilianPhone(raw: string): boolean {
 
 	return true;
 }
-
-export function buildWhatsAppUrl(raw: string, message?: string): string {
-	const digits = raw.replace(/\D/g, "");
-	const withCountry =
-		digits.startsWith("55") && digits.length > 11 ? digits : `55${digits}`;
-	const base = `https://wa.me/${withCountry}`;
-	return message ? `${base}?text=${encodeURIComponent(message)}` : base;
-}

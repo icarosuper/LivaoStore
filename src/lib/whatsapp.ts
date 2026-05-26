@@ -1,5 +1,13 @@
 import type { CartItem } from "~/hooks/use-cart";
 
+export function buildCustomerWhatsAppUrl(raw: string, message?: string): string {
+	const digits = raw.replace(/\D/g, "");
+	const withCountry =
+		digits.startsWith("55") && digits.length > 11 ? digits : `55${digits}`;
+	const base = `https://wa.me/${withCountry}`;
+	return message ? `${base}?text=${encodeURIComponent(message)}` : base;
+}
+
 export function buildWhatsAppUrl(items: CartItem[], total: number): string {
 	const number = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "";
 

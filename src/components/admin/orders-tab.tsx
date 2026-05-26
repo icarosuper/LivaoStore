@@ -11,7 +11,7 @@ import {
 	TableHeader,
 	TableRow,
 } from "~/components/ui/table";
-import { buildWhatsAppUrl } from "~/lib/phone";
+import { buildCustomerWhatsAppUrl } from "~/lib/whatsapp";
 import { createSupabaseBrowserClient } from "~/lib/supabase";
 import { api } from "~/trpc/react";
 
@@ -75,7 +75,7 @@ export function OrdersTab() {
 								{o.whatsapp && (
 									<a
 										className="text-xs text-green-600 hover:underline"
-										href={buildWhatsAppUrl(o.whatsapp)}
+										href={buildCustomerWhatsAppUrl(o.whatsapp)}
 										rel="noreferrer"
 										target="_blank"
 									>
@@ -173,7 +173,7 @@ export function OrdersTab() {
 									{o.whatsapp ? (
 										<a
 											className="text-green-600 text-sm hover:underline"
-											href={buildWhatsAppUrl(o.whatsapp)}
+											href={buildCustomerWhatsAppUrl(o.whatsapp)}
 											rel="noreferrer"
 											target="_blank"
 										>
