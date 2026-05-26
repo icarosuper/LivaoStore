@@ -14,12 +14,19 @@ products
   created_at          timestamp default now()
   stock_restocked_at  timestamp                    -- atualizado ao aumentar quantity; vitrine exibe badge "Voltou!" por 24h
 
+customers                              -- identidade do cliente (sem login)
+  whatsapp       text PK               -- número com DDI+DDD, sem formatação
+  name           text NOT NULL
+  updated_at     timestamp default now()
+
 product_interests                      -- demanda reprimida: clientes que querem item sem estoque
   id             uuid PK default random()
   product_id     uuid FK → products.id
   customer_name  text NOT NULL
   whatsapp       text NOT NULL          -- número com DDI+DDD, sem formatação
   created_at     timestamp default now()
+  archived_at    timestamp              -- null = leva ativa; preenchido = leva arquivada (ao adicionar estoque)
+  notified_at    timestamp              -- null = não notificado; preenchido = já avisado via WA
 
 orders
   id             uuid PK default random()

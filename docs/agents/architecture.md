@@ -63,8 +63,10 @@ Produtos cujo estoque aumentou recentemente (campo `stock_restocked_at` atualiza
 | orders | `create` | public | Cria pedido + subtrai estoque (transação FOR UPDATE) |
 | orders | `list` | admin | Lista pedidos com itens detalhados |
 | orders | `setStatus` | admin | Muda status; restaura estoque se cancelado |
-| interests | `register` | public | Salva nome + WhatsApp do cliente interessado em produto sem estoque |
-| interests | `listByProduct` | admin | Lista interessados de um produto (para aba de avisos) |
+| interests | `register` | public | Salva nome + WhatsApp; upsert em `customers`; deduplica por (whatsapp, productId) na leva ativa |
+| interests | `listByProduct` | admin | Lista interessados ativos (leva atual) de um produto com status de notificação |
+| interests | `markNotified` | admin | Marca interesse como notificado via WhatsApp (`notified_at = now()`) |
+| products | `addStock` | admin | Adiciona estoque + arquiva interesses ativos da leva + atualiza `stock_restocked_at` |
 
 ## Formato da Mensagem WhatsApp
 

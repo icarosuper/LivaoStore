@@ -18,11 +18,17 @@ Stack: Next.js App Router · TypeScript · tRPC · Drizzle ORM · Supabase (Post
 
 1. **Run type check**: `pnpm typecheck`
 2. **Run lint**: `pnpm lint`
-3. **Update docs**: se adicionou rotas tRPC, campos no schema, env vars ou padrões não óbvios → atualize o doc relevante em `docs/agents/`
+3. **Update docs** — obrigatório sempre que houver mudança relevante:
+   - Nova feature, componente ou hook → atualizar `docs/agents/features.md`
+   - Nova rota tRPC ou alteração de procedure → atualizar `docs/agents/architecture.md` e `docs/agents/features.md`
+   - Mudança no schema (tabela, coluna, enum) → atualizar `docs/agents/database.md`
+   - Nova env var ou padrão arquitetural não óbvio → atualizar o doc relevante em `docs/agents/`
+   - Feature movida de "Planned" para "Implemented" → atualizar `docs/agents/features.md`
 4. **NEVER COMMIT OR PUSH WITHOUT PERMISSION**: o usuário faz isso
 
 ## Docs
 
+- [Features](docs/agents/features.md) — leia antes de adicionar funcionalidades; inventário completo de features implementadas, componentes, hooks e utilitários
 - [Architecture](docs/agents/architecture.md) — leia ao navegar no código ou adicionar features; mapeia rotas, fluxos, procedimentos tRPC
 - [Database](docs/agents/database.md) — leia ao tocar no schema ou queries; regra de estoque disponível, migrations
 - [Auth](docs/agents/auth.md) — leia ao tocar em autenticação, middleware ou proteção de rotas
