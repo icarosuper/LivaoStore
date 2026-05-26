@@ -5,10 +5,17 @@ function lv(id: string, value: string): string {
 	return `${id}${len}${value}`;
 }
 
+function toAscii(str: string): string {
+	return str
+		.normalize("NFD")
+		.replace(/[̀-ͯ]/g, "")
+		.replace(/[^\x20-\x7E]/g, "");
+}
+
 function buildPixPayload(amount: number): string {
 	const chave = process.env.NEXT_PUBLIC_PIX_CHAVE ?? "";
-	const nome = (process.env.NEXT_PUBLIC_PIX_NOME ?? "").substring(0, 25);
-	const cidade = (process.env.NEXT_PUBLIC_PIX_CIDADE ?? "").substring(0, 15);
+	const nome = toAscii(process.env.NEXT_PUBLIC_PIX_NOME ?? "").substring(0, 25);
+	const cidade = toAscii(process.env.NEXT_PUBLIC_PIX_CIDADE ?? "").substring(0, 15);
 	const amountStr = amount.toFixed(2);
 
 	const merchantAccountInfo = lv(
