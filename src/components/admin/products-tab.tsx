@@ -23,6 +23,8 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "~/components/ui/dialog";
+import { Input } from "~/components/ui/input";
+import { Label } from "~/components/ui/label";
 import { Switch } from "~/components/ui/switch";
 import {
 	Table,
@@ -58,6 +60,10 @@ export function ProductsTab() {
 		null,
 	);
 	const [togglingId, setTogglingId] = useState<string | null>(null);
+	const [addStockProductId, setAddStockProductId] = useState<string | null>(
+		null,
+	);
+	const [addStockQty, setAddStockQty] = useState(1);
 
 	const countMap = Object.fromEntries(
 		interestCounts?.map((c) => [c.productId, c.count]) ?? [],
@@ -86,6 +92,7 @@ export function ProductsTab() {
 				{ event: "*", schema: "public", table: "product_interests" },
 				() => {
 					void utils.interests.allCounts.invalidate();
+					void utils.interests.listByProduct.invalidate();
 				},
 			)
 			.subscribe();
@@ -111,17 +118,28 @@ export function ProductsTab() {
 		onSuccess: () => void utils.products.adminList.invalidate(),
 		onSettled: () => setTogglingId(null),
 	});
-
-	function handleToggle(id: string) {
-		setTogglingId(id);
-		toggle.mutate({ id });
-	}
 	const del = api.products.delete.useMutation({
 		onSuccess: () => {
 			void utils.products.adminList.invalidate();
 			setDeleteId(null);
 		},
 	});
+	const addStock = api.products.addStock.useMutation({
+		onSuccess: () => {
+			void utils.products.adminList.invalidate();
+			void utils.interests.allCounts.invalidate();
+			setAddStockProductId(null);
+			setAddStockQty(1);
+		},
+	});
+	const markNotified = api.interests.markNotified.useMutation({
+		onSuccess: () => void utils.interests.listByProduct.invalidate(),
+	});
+
+	function handleToggle(id: string) {
+		setTogglingId(id);
+		toggle.mutate({ id });
+	}
 
 	const { data: interests } = api.interests.listByProduct.useQuery(
 		{ productId: interestProductId ?? "" },
@@ -155,6 +173,21 @@ export function ProductsTab() {
 				variant="outline"
 			>
 				Interessados ({c ?? 0})
+			</Button>
+		);
+	}
+
+	function AddStockButton({ productId }: { productId: string }) {
+		return (
+			<Button
+				onClick={() => {
+					setAddStockQty(1);
+					setAddStockProductId(productId);
+				}}
+				size="sm"
+				variant="outline"
+			>
+				Adicionar estoque
 			</Button>
 		);
 	}
@@ -206,6 +239,7 @@ export function ProductsTab() {
 								Editar
 							</Button>
 							<InterestButton productId={p.id} />
+							<AddStockButton productId={p.id} />
 							<Button
 								onClick={() => setDeleteId(p.id)}
 								size="sm"
@@ -264,6 +298,7 @@ export function ProductsTab() {
 										Editar
 									</Button>
 									<InterestButton productId={p.id} />
+									<AddStockButton productId={p.id} />
 									<Button
 										onClick={() => setDeleteId(p.id)}
 										size="sm"
@@ -351,26 +386,73 @@ export function ProductsTab() {
 						{interests?.map((i) => (
 							<div className="flex items-center justify-between" key={i.id}>
 								<div>
-									<p className="font-medium">{i.customerName}</p>
+									<p
+										className={
+											i.notifiedAt
+												? "font-medium text-muted-foreground"
+												: "font-medium"
+										}
+									>
+										{i.customerName}
+									</p>
 									<p className="text-muted-foreground text-sm">{i.whatsapp}</p>
 								</div>
 								<Button
-									onClick={() =>
+									className={i.notifiedAt ? "text-muted-foreground" : ""}
+									onClick={() => {
 										window.open(
 											`https://wa.me/${i.whatsapp}?text=${encodeURIComponent(`Olá ${i.customerName}! O produto que você se interessou voltou ao estoque. Acesse nossa loja para pedir!`)}`,
 											"_blank",
-										)
-									}
+										);
+										if (!i.notifiedAt) markNotified.mutate({ id: i.id });
+									}}
 									size="sm"
-									variant="outline"
+									variant={i.notifiedAt ? "ghost" : "outline"}
 								>
-									Avisar
+									{i.notifiedAt ? "✓ Avisado" : "Avisar"}
 								</Button>
 							</div>
 						))}
 					</div>
 				</DialogContent>
 			</Dialog>
+
+			<AlertDialog
+				onOpenChange={(o) => !o && setAddStockProductId(null)}
+				open={!!addStockProductId}
+			>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>Adicionar estoque</AlertDialogTitle>
+					</AlertDialogHeader>
+					<div className="py-2">
+						<Label htmlFor="add-stock-qty">Quantidade a adicionar</Label>
+						<Input
+							id="add-stock-qty"
+							min={1}
+							onChange={(e) => setAddStockQty(parseInt(e.target.value, 10))}
+							type="number"
+							value={addStockQty}
+						/>
+						<p className="mt-2 text-muted-foreground text-xs">
+							Isso irá arquivar os interesses da leva atual e marcar o produto
+							como reposto.
+						</p>
+					</div>
+					<AlertDialogFooter>
+						<AlertDialogCancel>Cancelar</AlertDialogCancel>
+						<AlertDialogAction
+							disabled={addStock.isPending || addStockQty < 1}
+							onClick={() =>
+								addStockProductId &&
+								addStock.mutate({ id: addStockProductId, quantity: addStockQty })
+							}
+						>
+							{addStock.isPending ? "Salvando..." : "Confirmar"}
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 		</div>
 	);
 }

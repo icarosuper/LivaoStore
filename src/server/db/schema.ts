@@ -29,6 +29,12 @@ export const products = pgTable("products", {
 	stockRestockedAt: timestamp("stock_restocked_at"),
 });
 
+export const customers = pgTable("customers", {
+	whatsapp: text("whatsapp").primaryKey(),
+	name: text("name").notNull(),
+	updatedAt: timestamp("updated_at").default(sql`now()`),
+});
+
 export const productInterests = pgTable("product_interests", {
 	id: uuid("id").primaryKey().defaultRandom(),
 	productId: uuid("product_id")
@@ -37,6 +43,8 @@ export const productInterests = pgTable("product_interests", {
 	customerName: text("customer_name").notNull(),
 	whatsapp: text("whatsapp").notNull(),
 	createdAt: timestamp("created_at").default(sql`now()`),
+	archivedAt: timestamp("archived_at"),
+	notifiedAt: timestamp("notified_at"),
 });
 
 export const orders = pgTable("orders", {
@@ -86,3 +94,7 @@ export const productInterestsRelations = relations(
 		}),
 	}),
 );
+
+export const customersRelations = relations(customers, ({ many }) => ({
+	interests: many(productInterests),
+}));

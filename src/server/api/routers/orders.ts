@@ -1,6 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { eq, inArray, sql } from "drizzle-orm";
 import { z } from "zod";
+import { isValidBrazilianPhone } from "~/lib/phone";
 import {
 	adminProcedure,
 	createTRPCRouter,
@@ -18,8 +19,8 @@ export const ordersRouter = createTRPCRouter({
 	create: publicProcedure
 		.input(
 			z.object({
-				customerName: z.string().optional(),
-				whatsapp: z.string().optional(),
+				customerName: z.string().min(2).max(100).optional(),
+				whatsapp: z.string().refine((v) => !v || isValidBrazilianPhone(v), "Número de telefone inválido").optional(),
 				total: z.string().regex(/^\d+(\.\d{1,2})?$/),
 				items: z.array(orderItemSchema).min(1),
 			}),

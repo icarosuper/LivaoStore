@@ -11,6 +11,7 @@ import {
 	TableHeader,
 	TableRow,
 } from "~/components/ui/table";
+import { buildWhatsAppUrl } from "~/lib/phone";
 import { createSupabaseBrowserClient } from "~/lib/supabase";
 import { api } from "~/trpc/react";
 
@@ -71,6 +72,16 @@ export function OrdersTab() {
 						<div className="flex items-start justify-between gap-2">
 							<div>
 								<p className="font-medium">{o.customerName ?? "—"}</p>
+								{o.whatsapp && (
+									<a
+										className="text-xs text-green-600 hover:underline"
+										href={buildWhatsAppUrl(o.whatsapp)}
+										rel="noreferrer"
+										target="_blank"
+									>
+										{o.whatsapp}
+									</a>
+								)}
 								<p className="text-muted-foreground text-xs">
 									{o.createdAt
 										? new Date(o.createdAt).toLocaleDateString("pt-BR")
@@ -142,6 +153,7 @@ export function OrdersTab() {
 						<TableRow>
 							<TableHead>Data</TableHead>
 							<TableHead>Cliente</TableHead>
+							<TableHead>WhatsApp</TableHead>
 							<TableHead>Itens</TableHead>
 							<TableHead>Total</TableHead>
 							<TableHead>Status</TableHead>
@@ -157,6 +169,20 @@ export function OrdersTab() {
 										: "—"}
 								</TableCell>
 								<TableCell>{o.customerName ?? "—"}</TableCell>
+								<TableCell>
+									{o.whatsapp ? (
+										<a
+											className="text-green-600 text-sm hover:underline"
+											href={buildWhatsAppUrl(o.whatsapp)}
+											rel="noreferrer"
+											target="_blank"
+										>
+											{o.whatsapp}
+										</a>
+									) : (
+										"—"
+									)}
+								</TableCell>
 								<TableCell className="text-sm">
 									{o.items
 										.map((i) => `${i.quantity}x ${i.productName}`)

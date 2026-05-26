@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "~/components/ui/button";
 import {
 	Dialog,
@@ -10,6 +10,8 @@ import {
 } from "~/components/ui/dialog";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
+import { useCustomer } from "~/hooks/use-customer";
+import { isValidBrazilianPhone } from "~/lib/phone";
 import { api } from "~/trpc/react";
 
 interface Props {
@@ -19,24 +21,73 @@ interface Props {
 	onClose: () => void;
 }
 
+type Step = "phone" | "name" | "done";
+
 export function InterestModal({
 	productId,
 	productName,
 	open,
 	onClose,
 }: Props) {
+	const { customer, saveCustomer } = useCustomer();
+	const [step, setStep] = useState<Step>("phone");
+	const [phone, setPhone] = useState("");
 	const [name, setName] = useState("");
-	const [whatsapp, setWhatsapp] = useState("");
-	const [done, setDone] = useState(false);
+	const [phoneError, setPhoneError] = useState("");
+
+	useEffect(() => {
+		if (open) {
+			setPhone(customer?.whatsapp ?? "");
+			setName("");
+			setStep("phone");
+			setPhoneError("");
+		}
+	}, [open, customer?.whatsapp]);
+
+	const utils = api.useUtils();
+
+	const lookupQuery = api.interests.lookupCustomer.useQuery(
+		{ whatsapp: phone },
+		{ enabled: false, retry: false },
+	);
 
 	const register = api.interests.register.useMutation({
-		onSuccess: () => setDone(true),
+		onSuccess: () => {
+			setStep("done");
+			void utils.interests.activeProductIds.invalidate();
+		},
 	});
 
-	function handleSubmit(e: React.FormEvent) {
+	async function handlePhoneContinue(e: React.FormEvent) {
 		e.preventDefault();
-		register.mutate({ productId, customerName: name, whatsapp });
+		setPhoneError("");
+		if (!isValidBrazilianPhone(phone)) {
+			setPhoneError(
+				"Número inválido. Informe um celular ou fixo brasileiro com DDD.",
+			);
+			return;
+		}
+		const result = await lookupQuery.refetch();
+		if (result.data?.name) {
+			saveCustomer({ name: result.data.name, whatsapp: phone });
+			register.mutate({
+				productId,
+				customerName: result.data.name,
+				whatsapp: phone,
+			});
+		} else {
+			setStep("name");
+		}
 	}
+
+	function handleNameSubmit(e: React.FormEvent) {
+		e.preventDefault();
+		const trimmed = name.trim();
+		saveCustomer({ name: trimmed, whatsapp: phone });
+		register.mutate({ productId, customerName: trimmed, whatsapp: phone });
+	}
+
+	const isPending = lookupQuery.isFetching || register.isPending;
 
 	return (
 		<Dialog onOpenChange={(o) => !o && onClose()} open={open}>
@@ -44,40 +95,71 @@ export function InterestModal({
 				<DialogHeader>
 					<DialogTitle>Quero esse item</DialogTitle>
 				</DialogHeader>
-				{done ? (
-					<p className="text-muted-foreground text-sm">
-						Anotado! Você será avisado quando <strong>{productName}</strong>{" "}
-						estiver disponível.
-					</p>
-				) : (
-					<form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+
+				{step === "phone" && (
+					<form className="flex flex-col gap-4" onSubmit={handlePhoneContinue}>
 						<p className="text-muted-foreground text-sm">
-							Deixe seus dados para ser avisado quando{" "}
+							Informe seu WhatsApp para ser avisado quando{" "}
 							<strong>{productName}</strong> voltar ao estoque.
+						</p>
+						<div>
+							<Label htmlFor="phone">WhatsApp (com DDD)</Label>
+							<Input
+								id="phone"
+								inputMode="numeric"
+								maxLength={13}
+								onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
+								placeholder="31999999999"
+								required
+								value={phone}
+							/>
+							{phoneError && (
+								<p className="mt-1 text-red-600 text-xs">{phoneError}</p>
+							)}
+						</div>
+						<Button disabled={isPending} type="submit">
+							{isPending ? "Verificando..." : "Continuar"}
+						</Button>
+					</form>
+				)}
+
+				{step === "name" && (
+					<form className="flex flex-col gap-4" onSubmit={handleNameSubmit}>
+						<p className="text-muted-foreground text-sm">
+							Qual é o seu nome?
 						</p>
 						<div>
 							<Label htmlFor="name">Nome</Label>
 							<Input
 								id="name"
+								maxLength={100}
+								minLength={2}
 								onChange={(e) => setName(e.target.value)}
 								required
 								value={name}
 							/>
 						</div>
-						<div>
-							<Label htmlFor="whatsapp">WhatsApp (com DDD)</Label>
-							<Input
-								id="whatsapp"
-								onChange={(e) => setWhatsapp(e.target.value)}
-								placeholder="31999999999"
-								required
-								value={whatsapp}
-							/>
-						</div>
 						<Button disabled={register.isPending} type="submit">
 							{register.isPending ? "Salvando..." : "Quero ser avisado"}
 						</Button>
+						<button
+							className="text-muted-foreground text-xs underline"
+							onClick={() => {
+								setStep("phone");
+								setPhoneError("");
+							}}
+							type="button"
+						>
+							Voltar
+						</button>
 					</form>
+				)}
+
+				{step === "done" && (
+					<p className="text-muted-foreground text-sm">
+						Anotado! Você será avisado quando <strong>{productName}</strong>{" "}
+						estiver disponível.
+					</p>
 				)}
 			</DialogContent>
 		</Dialog>

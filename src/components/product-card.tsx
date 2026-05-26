@@ -19,6 +19,7 @@ type Product = {
 interface Props {
 	product: Product;
 	onAddToCart: (item: Omit<CartItem, "quantity">) => void;
+	hasInterest?: boolean;
 }
 
 function isRestocked(stockRestockedAt: Date | null): boolean {
@@ -27,7 +28,7 @@ function isRestocked(stockRestockedAt: Date | null): boolean {
 	return diff < 24 * 60 * 60 * 1000;
 }
 
-export function ProductCard({ product, onAddToCart }: Props) {
+export function ProductCard({ product, onAddToCart, hasInterest }: Props) {
 	const [modalOpen, setModalOpen] = useState(false);
 	const restocked = isRestocked(product.stockRestockedAt);
 
@@ -58,20 +59,20 @@ export function ProductCard({ product, onAddToCart }: Props) {
 					)}
           <div className="flex justify-between">
             <p className="mt-auto font-bold text-2xl text-gray-900">
-  						R$ {parseFloat(product.price).toFixed(2).replace(".", ",")}
-  					</p>
-  					{product.availableStock >= 1 && product.availableStock <= 5 ? (
-  						<span className="inline-flex items-center gap-1 rounded-full border border-orange-400 bg-orange-100 px-3 py-1 font-semibold text-orange-700 text-sm">
-  							🔥{" "}
-  							{product.availableStock === 1
-  								? "Último disponível!"
-  								: `Corra! Apenas ${product.availableStock} disponíveis`}
-  						</span>
-  					) : product.availableStock > 5 ? (
-  						<span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 font-medium text-green-700 text-sm">
-  							✓ {product.availableStock} disponíveis
-  						</span>
-  					) : null}
+						R$ {parseFloat(product.price).toFixed(2).replace(".", ",")}
+					</p>
+					{product.availableStock >= 1 && product.availableStock <= 5 ? (
+						<span className="inline-flex items-center gap-1 rounded-full border border-orange-400 bg-orange-100 px-3 py-1 font-semibold text-orange-700 text-sm">
+							🔥{" "}
+							{product.availableStock === 1
+								? "Último disponível!"
+								: `Corra! Apenas ${product.availableStock} disponíveis`}
+						</span>
+					) : product.availableStock > 5 ? (
+						<span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 font-medium text-green-700 text-sm">
+							✓ {product.availableStock} disponíveis
+						</span>
+					) : null}
 					</div>
 					{product.availableStock > 0 ? (
 						<Button
@@ -84,6 +85,10 @@ export function ProductCard({ product, onAddToCart }: Props) {
 							}
 						>
 							Adicionar
+						</Button>
+					) : hasInterest ? (
+						<Button className="text-muted-foreground" disabled variant="outline">
+							✓ Interesse registrado
 						</Button>
 					) : (
 						<Button onClick={() => setModalOpen(true)} variant="outline">

@@ -1,11 +1,11 @@
-import { eq } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
 import {
 	adminProcedure,
 	createTRPCRouter,
 	publicProcedure,
 } from "~/server/api/trpc";
-import { products } from "~/server/db/schema";
+import { productInterests, products } from "~/server/db/schema";
 
 export const productsRouter = createTRPCRouter({
 	list: publicProcedure
@@ -136,6 +136,37 @@ export const productsRouter = createTRPCRouter({
 					...(stockRestockedAt ? { stockRestockedAt } : {}),
 				})
 				.where(eq(products.id, id))
+				.returning({ id: products.id });
+
+			return updated!;
+		}),
+
+	addStock: adminProcedure
+		.input(
+			z.object({
+				id: z.string().uuid(),
+				quantity: z.number().int().positive(),
+			}),
+		)
+		.output(z.object({ id: z.string().uuid() }))
+		.mutation(async ({ ctx, input }) => {
+			await ctx.db
+				.update(productInterests)
+				.set({ archivedAt: new Date() })
+				.where(
+					and(
+						eq(productInterests.productId, input.id),
+						isNull(productInterests.archivedAt),
+					),
+				);
+
+			const [updated] = await ctx.db
+				.update(products)
+				.set({
+					quantity: sql`${products.quantity} + ${input.quantity}`,
+					stockRestockedAt: new Date(),
+				})
+				.where(eq(products.id, input.id))
 				.returning({ id: products.id });
 
 			return updated!;
