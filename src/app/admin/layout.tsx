@@ -25,7 +25,7 @@ export default function AdminLayout({
 					Sair
 				</Button>
 			</header>
-			<main className="p-6">{children}</main>
+			<main className="mx-auto max-w-5xl p-6">{children}</main>
 		</div>
 	);
 }

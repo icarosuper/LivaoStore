@@ -91,7 +91,11 @@ export function ProductCard({
 								})
 							}
 						>
-							Adicionar
+							{cartQuantity >= product.availableStock
+								? "Máximo no carrinho"
+								: cartQuantity > 0
+									? `Adicionar (${cartQuantity} no carrinho)`
+									: "Adicionar"}
 						</Button>
 					) : hasInterest ? (
 						<Button

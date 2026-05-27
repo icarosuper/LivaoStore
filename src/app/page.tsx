@@ -115,17 +115,27 @@ export default function HomePage() {
 					</button>
 				</div>
 			)}
-			<div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-				{products?.map((product) => (
-					<ProductCard
-						cartQuantity={cartQuantityMap.get(product.id) ?? 0}
-						hasInterest={myInterestSet.has(product.id)}
-						key={product.id}
-						onAddToCart={cart.addItem}
-						product={product}
-					/>
-				))}
-			</div>
+			{products && products.length === 0 ? (
+				<div className="flex flex-col items-center gap-3 py-20 text-gray-400">
+					<span className="text-5xl">🍬</span>
+					<p className="font-medium text-lg">
+						Nenhum produto disponível no momento
+					</p>
+					<p className="text-sm">Volte em breve para ver nossas novidades!</p>
+				</div>
+			) : (
+				<div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+					{products?.map((product) => (
+						<ProductCard
+							cartQuantity={cartQuantityMap.get(product.id) ?? 0}
+							hasInterest={myInterestSet.has(product.id)}
+							key={product.id}
+							onAddToCart={cart.addItem}
+							product={product}
+						/>
+					))}
+				</div>
+			)}
 			<CartBar items={cart.items} total={cart.total} />
 		</main>
 	);
