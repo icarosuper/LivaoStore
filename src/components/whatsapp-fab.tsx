@@ -5,13 +5,13 @@ import { usePathname } from "next/navigation";
 export function WhatsAppFab() {
 	const pathname = usePathname();
 
-	if (pathname.startsWith("/admin")) return null;
+	if (pathname.startsWith("/admin") || pathname === "/pedido") return null;
 
 	const number = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "";
 
 	return (
 		<a
-			className="fixed right-6 bottom-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] shadow-lg transition-transform hover:scale-110"
+			className="fixed right-6 bottom-24 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] shadow-lg transition-transform hover:scale-110"
 			href={`https://wa.me/${number}`}
 			rel="noopener noreferrer"
 			target="_blank"

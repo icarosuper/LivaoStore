@@ -106,6 +106,7 @@ export default function HomePage() {
 							: `${removedNotice.length} itens foram removidos do carrinho pois esgotaram.`}
 					</span>
 					<button
+						aria-label="Fechar aviso"
 						className="ml-4 shrink-0"
 						onClick={() => setRemovedNotice([])}
 						type="button"

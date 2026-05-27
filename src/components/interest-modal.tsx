@@ -125,9 +125,7 @@ export function InterestModal({
 
 				{step === "name" && (
 					<form className="flex flex-col gap-4" onSubmit={handleNameSubmit}>
-						<p className="text-muted-foreground text-sm">
-							Qual é o seu nome?
-						</p>
+						<p className="text-muted-foreground text-sm">Qual é o seu nome?</p>
 						<div>
 							<Label htmlFor="name">Nome</Label>
 							<Input
@@ -156,10 +154,15 @@ export function InterestModal({
 				)}
 
 				{step === "done" && (
-					<p className="text-muted-foreground text-sm">
-						Anotado! Você será avisado quando <strong>{productName}</strong>{" "}
-						estiver disponível.
-					</p>
+					<div className="flex flex-col gap-4">
+						<p className="text-muted-foreground text-sm">
+							Anotado! Você será avisado quando <strong>{productName}</strong>{" "}
+							estiver disponível.
+						</p>
+						<Button onClick={onClose} variant="outline">
+							Fechar
+						</Button>
+					</div>
 				)}
 			</DialogContent>
 		</Dialog>

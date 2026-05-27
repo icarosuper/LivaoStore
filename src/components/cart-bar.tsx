@@ -16,7 +16,7 @@ export function CartBar({ items, total }: Props) {
 	if (count === 0) return null;
 
 	return (
-		<div className="fixed right-0 bottom-0 left-0 z-40 flex items-center justify-between border-t bg-white px-4 py-5 pr-24 shadow-xl">
+		<div className="fixed right-0 bottom-0 left-0 z-40 flex items-center justify-between border-t bg-white px-6 py-4 shadow-xl">
 			<span className="font-semibold">
 				{count} {count === 1 ? "item" : "itens"} —{" "}
 				<strong>R$ {total.toFixed(2).replace(".", ",")}</strong>
