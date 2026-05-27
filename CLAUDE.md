@@ -35,3 +35,4 @@ Stack: Next.js App Router · TypeScript · tRPC · Drizzle ORM · Supabase (Post
 - [Conventions](docs/agents/conventions.md) — leia ao escrever qualquer código; Server Components, tRPC, Zod, carrinho
 - [Commands](docs/agents/commands.md) — leia ao buildar, rodar ou fazer setup do projeto
 - [Decisions](docs/agents/decisions.md) — leia antes de "corrigir" padrões incomuns; documenta escolhas arquiteturais intencionais
+- [Design](docs/agents/design.md) — leia ao tocar em UI; esquema de cores Peach Blossom, tipografia, padrões de componentes e inspiração visual

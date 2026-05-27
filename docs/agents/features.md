@@ -93,7 +93,7 @@ Erros de `orders.create` exibidos em banner vermelho inline.
 
 Acesso via Magic Link (Supabase Auth). Middleware protege rotas `/admin/*`.
 
-Duas abas: **Produtos** e **Pedidos**.
+Duas abas: **Produtos** e **Pedidos**. Aba ativa refletida em `?tab=products|orders`; troca usa `router.push` (histórico normal, sem scroll).
 
 ---
 
@@ -253,7 +253,7 @@ Ver [`docs/ui-ux.md`](../ui-ux.md) para levantamento completo com status de cada
 - Gerenciamento de clientes (tabela de métricas, cancelamento pelo próprio cliente)
 - Pedidos: visualização separada de pendentes ordenados por data asc (botão quick-filter)
 - Pedidos: visualização separada de pendentes ordenados por data asc
-- Layout admin: aba Clientes, tabs alteram URL
+- Layout admin: aba Clientes
 - Carrinho: bloquear itens indisponíveis na vitrine (tratar no `/pedido` já implementado)
 - Testes (unitários, componente, smoke, E2E)
 - Switch ativo: animação durante loading (bloqueio já feito via `togglingId`)
