@@ -37,7 +37,7 @@ Inventory of all implemented features. Read before adding new functionality to a
 
 ## Carrinho
 
-Estado local em memória via `useCart` hook. Sem persistência no banco.
+Estado local via `useCart` hook. Persistido em `localStorage` (key `livao_cart`) — sobrevive a fechamento de aba/browser. Sem persistência no banco.
 
 | Função | Comportamento |
 |--------|---------------|
@@ -46,7 +46,7 @@ Estado local em memória via `useCart` hook. Sem persistência no banco.
 | `updateQuantity(productId, qty)` | Atualiza; qty ≤ 0 remove o item |
 | `clear()` | Esvazia carrinho |
 
-**CartBar** (`components/cart-bar.tsx`): barra fixa na base da tela quando `count > 0`. Salva carrinho em `sessionStorage` ao navegar para `/pedido`.
+**CartBar** (`components/cart-bar.tsx`): barra fixa na base da tela quando `count > 0`. Navega para `/pedido` ao clicar.
 
 ---
 
@@ -74,7 +74,7 @@ Aberto pelo `ProductCard` quando cliente clica "Quero esse item".
 
 ## Página de pedido (`/pedido`)
 
-Lê carrinho do `sessionStorage`. Exibe resumo + total.
+Lê carrinho do `localStorage` (key `livao_cart`). Exibe resumo + total.
 
 ### Fluxo de confirmação
 
@@ -83,7 +83,7 @@ Lê carrinho do `sessionStorage`. Exibe resumo + total.
 3. Gera QR Code Pix via `lib/pix.generatePixQRCode`
 4. Exibe QR + botão "Enviar pedido pelo WhatsApp"
 5. "Enviar pelo WhatsApp" → `lib/whatsapp.buildWhatsAppUrl` → `wa.me/` com mensagem pré-formatada
-6. "Concluir pedido" → limpa `sessionStorage` e redireciona para `/`
+6. "Concluir pedido" → limpa `localStorage` e redireciona para `/`
 
 Erros de `orders.create` exibidos em banner vermelho inline.
 
@@ -139,14 +139,31 @@ Layout responsivo: tabela no desktop, cards no mobile.
 
 ### Status e transições
 
-| Status | Badge | Ações disponíveis |
-|--------|-------|-------------------|
-| `pending` | Secondary | "Marcar como Pago", "Cancelar" |
-| `paid` | Default | "Marcar como Entregue", "Cancelar" |
-| `delivered` | Outline | — |
-| `cancelled` | Destructive | — |
+| Status | Badge (cor) | Ações disponíveis |
+|--------|-------------|-------------------|
+| `pending` | Âmbar | "Marcar como Pago", "Cancelar" |
+| `paid` | Azul | "Marcar como Entregue", "Cancelar" |
+| `delivered` | Verde | — |
+| `cancelled` | Vermelho | — |
 
 Cancelamento chama `orders.setStatus → 'cancelled'` que restaura `quantity` dos produtos via `FOR UPDATE`.
+
+### Filtros e paginação
+
+`orders.list` aceita parâmetros de paginação e filtros server-side:
+- `page` / `pageSize` (padrão 20)
+- `status` — filtra por status específico
+- `customer` — `ilike` em `customerName` e `whatsapp`
+- `dateFrom` / `dateTo` — range de data (dateTo = fim-do-dia, 23:59:59)
+- `sortField` (`createdAt` | `total`) + `sortDir` (`asc` | `desc`)
+
+### Pedido manual
+
+Botão "+ Pedido manual" na aba de pedidos abre `ManualOrderDialog`:
+- Admin seleciona produtos e quantidades (deduze estoque via `FOR UPDATE`)
+- Nome e WhatsApp do cliente opcionais
+- Status inicial: `paid`
+- Sem fluxo Pix/WhatsApp — só para tracking de vendas feitas fora do sistema
 
 ### Link WhatsApp do cliente
 
@@ -166,8 +183,9 @@ Quando o pedido tem `whatsapp` preenchido, exibe link clicável (verde) que abre
 | products | `toggleActive` | admin | Inverte `active` |
 | products | `delete` | admin | Exclui produto |
 | orders | `create` | public | Cria pedido + subtrai estoque em transação `FOR UPDATE` |
-| orders | `list` | admin | Lista pedidos com itens detalhados |
+| orders | `list` | admin | Lista pedidos paginados com filtros (status, cliente, data, sort) |
 | orders | `setStatus` | admin | Transição de status; restaura estoque se `cancelled` |
+| orders | `createManual` | admin | Cria pedido manual (status=paid) com deducção de estoque; sem fluxo Pix/WhatsApp |
 | interests | `register` | public | Upsert `customers` + deduplication por `(whatsapp, productId, leva ativa)` |
 | interests | `allCounts` | admin | Contagem de interessados ativos por produto (para badge na tabela) |
 | interests | `listByProduct` | admin | Interessados da leva ativa de um produto com `notifiedAt` |
@@ -185,7 +203,8 @@ Quando o pedido tem `whatsapp` preenchido, exibe link clicável (verde) que abre
 | `components/interest-modal.tsx` | Modal de registro de interesse com identificação do cliente |
 | `components/whatsapp-fab.tsx` | FAB do WhatsApp (presente mas não usado na vitrine principal) |
 | `components/admin/products-tab.tsx` | Aba de produtos do dashboard admin |
-| `components/admin/orders-tab.tsx` | Aba de pedidos do dashboard admin |
+| `components/admin/orders-tab.tsx` | Aba de pedidos do dashboard admin (filtros, paginação, status colorido) |
+| `components/admin/manual-order-dialog.tsx` | Dialog de criação de pedido manual pelo admin |
 | `components/admin/product-form.tsx` | Formulário reutilizado em criar/editar produto |
 
 ---
@@ -223,13 +242,18 @@ Quando o pedido tem `whatsapp` preenchido, exibe link clicável (verde) que abre
 
 ---
 
+## UI/UX Backlog
+
+Ver [`docs/ui-ux.md`](../ui-ux.md) para levantamento completo com status de cada item.
+
+---
+
 ## Planned / Not Yet Implemented
 
 - Gerenciamento de clientes (tabela de métricas, cancelamento pelo próprio cliente)
-- Admin: criar transações manuais para tracking off-system
-- Pedidos: filtros e sorting (status, cliente, produto, range de data)
+- Pedidos: visualização separada de pendentes ordenados por data asc (botão quick-filter)
 - Pedidos: visualização separada de pendentes ordenados por data asc
 - Layout admin: aba Clientes, tabs alteram URL
-- Carrinho: bloquear/tratar itens indisponíveis
+- Carrinho: bloquear itens indisponíveis na vitrine (tratar no `/pedido` já implementado)
 - Testes (unitários, componente, smoke, E2E)
 - Switch ativo: animação durante loading (bloqueio já feito via `togglingId`)

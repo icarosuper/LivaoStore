@@ -1,30 +1,20 @@
 - Gerenciamento de clientes
-    - Quero guardar o cliente no banco para algumas coisas
-        - Listar métricas dos clientes em uma tabela na dashboard
-        - Deixar cliente cancelar o próprio pedido
-    - Talvez pedir nome, número e TaxNumber dele em alguns lugares e salvar no LocalStorage e no banco(?)
-    - Talvez implementar login para cliente, mas eu não queria fazer isso
-
-- /admin funcionalidades
-    - admin deve poder criar transações feitas por fora para trackear
-        
-- /admin/produtos
-    - switch de produto ativo
-        - colocar uma animação durante o loading do switch de produto ativo e bloquear ele durante o loading
+    - Listar métricas dos clientes na dashboard (agregação de orders por whatsapp)
+        - Total gasto, número de pedidos, último pedido
+    - Identificação: pedir nome e número; salvar no LocalStorage e no banco
 
 - /admin/pedidos
-    - melhorar estilização
-        - cada status tem uma cor diferente
-    - adicionar filtros e sorting
-        - Filtros: status, nome/numero do cliente (um campo string que procura as duas coisas), produto, range de data
-        - Sort: data e preço
     - adicionar botão separado pra ver pedidos pendentes sort created asc
+    - export CSV de pedidos
 
 - Layout da página /admin
     - Adicionar tab clientes
     - Tabs devem alterar url
-    
-- Pedidos
+
+- Vitrine
+    - Busca/filtro de produtos (útil com 20+ produtos)
+
+- Pedidos / Carrinho
     - Não permitir usuário adicionar itens indisponíveis
     - Tratar carrinhos com itens indisponíveis
 
@@ -33,3 +23,19 @@
     - Componente
     - Smoke
     - E2E
+
+### Ordem de prioridade:
+Tier 1 — Resolve bugs/risco de UX agora
+1. Itens indisponíveis no carrinho — cliente pode chegar no checkout com item esgotado e ter erro. Bug real.
+
+Tier 2 — Admin diário funciona melhor
+2. Botão pedidos pendentes — operacional: admin abre e vê fila por ordem de chegada. Muito útil no dia a dia.
+
+Tier 3 — Features de valor
+3. Export CSV — financeiro, provavelmente vai querer antes do fim do mês.
+4. Filtros já implementados — done.
+
+Tier 4 — Quando crescer
+5. Aba clientes — depende de ter volume de pedidos para métricas fazerem sentido.
+6. Busca na vitrine — só releante com 20+ produtos.
+7. Testes — importante mas não bloqueia nada agora; smoke + E2E nas páginas críticas primeiro.
