@@ -237,20 +237,36 @@ export default function PedidoPage() {
 					</Button>
 				</>
 			) : (
-				<div className="mt-8 flex flex-col items-center gap-6">
+				<div className="mt-8 flex flex-col gap-6">
 					{qrUrl && (
-						<div className="flex flex-col items-center gap-2">
-							<p className="font-medium text-gray-700">QR Code Pix</p>
-							<p className="text-center text-gray-500 text-sm">
-								Escaneie para pagar R$ {total.toFixed(2).replace(".", ",")}
-							</p>
-							<Image alt="QR Code Pix" height={200} src={qrUrl} width={200} />
+						<div className="flex flex-col gap-3">
+							<div className="flex items-center gap-2">
+								<span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gray-900 font-bold text-white text-xs">
+									1
+								</span>
+								<p className="font-medium text-gray-900">Pague via Pix</p>
+							</div>
+							<div className="flex flex-col items-center gap-2 rounded-lg border p-4">
+								<p className="text-center text-gray-500 text-sm">
+									Escaneie o QR Code para pagar R${" "}
+									{total.toFixed(2).replace(".", ",")}
+								</p>
+								<Image alt="QR Code Pix" height={200} src={qrUrl} width={200} />
+							</div>
 						</div>
 					)}
 
-					<div className="flex w-full flex-col gap-3">
-						<p className="text-center text-gray-500 text-sm">
-							Entre em contato para garantir seu pedido
+					<div className="flex flex-col gap-3">
+						<div className="flex items-center gap-2">
+							<span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gray-900 font-bold text-white text-xs">
+								{qrUrl ? "2" : "1"}
+							</span>
+							<p className="font-medium text-gray-900">
+								Envie o pedido pelo WhatsApp
+							</p>
+						</div>
+						<p className="text-gray-500 text-sm">
+							Confirme seu pedido e envie o comprovante de pagamento.
 						</p>
 						<Button className="w-full" onClick={handleWhatsApp}>
 							Enviar pedido pelo WhatsApp
