@@ -1,7 +1,7 @@
 import "~/styles/globals.css";
 
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
+import { Baloo_2, Nunito } from "next/font/google";
 import { TooltipProvider } from "~/components/ui/tooltip";
 import { WhatsAppFab } from "~/components/whatsapp-fab";
 import { TRPCReactProvider } from "~/trpc/react";
@@ -12,16 +12,23 @@ export const metadata: Metadata = {
 	icons: [{ rel: "icon", url: "/favicon.ico" }],
 };
 
-const geist = Geist({
+const baloo = Baloo_2({
 	subsets: ["latin"],
-	variable: "--font-geist-sans",
+	weight: ["700", "800"],
+	variable: "--font-baloo",
+});
+
+const nunito = Nunito({
+	subsets: ["latin"],
+	weight: ["400", "700", "900"],
+	variable: "--font-nunito",
 });
 
 export default function RootLayout({
 	children,
 }: Readonly<{ children: React.ReactNode }>) {
 	return (
-		<html className={`${geist.variable}`} lang="pt-BR">
+		<html className={`light ${baloo.variable} ${nunito.variable}`} lang="pt-BR">
 			<body suppressHydrationWarning>
 				<TRPCReactProvider>
 					<TooltipProvider>

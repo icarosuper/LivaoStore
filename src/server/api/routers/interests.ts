@@ -1,12 +1,12 @@
 import { and, count, eq, isNull } from "drizzle-orm";
 import { z } from "zod";
+import { isValidBrazilianPhone } from "~/lib/phone";
 import {
 	adminProcedure,
 	createTRPCRouter,
 	publicProcedure,
 } from "~/server/api/trpc";
 import { customers, productInterests } from "~/server/db/schema";
-import { isValidBrazilianPhone } from "~/lib/phone";
 
 export const interestsRouter = createTRPCRouter({
 	register: publicProcedure
@@ -14,7 +14,9 @@ export const interestsRouter = createTRPCRouter({
 			z.object({
 				productId: z.string().uuid(),
 				customerName: z.string().min(2).max(100),
-				whatsapp: z.string().refine(isValidBrazilianPhone, "Número de telefone inválido"),
+				whatsapp: z
+					.string()
+					.refine(isValidBrazilianPhone, "Número de telefone inválido"),
 			}),
 		)
 		.output(z.object({ id: z.string().uuid() }))

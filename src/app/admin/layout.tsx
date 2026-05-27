@@ -21,9 +21,32 @@ export default function AdminLayout({
 	}
 
 	return (
-		<div className="min-h-screen bg-gray-50">
-			<header className="flex items-center justify-between border-b bg-white px-6 py-4">
-				<h1 className="font-bold text-lg">LivaoStore Admin</h1>
+		<div className="min-h-screen bg-[#fef5f0]">
+			<header className="flex items-center justify-between border-[#f0c0aa] border-b-2 bg-[#fff8f4] px-6 py-4 shadow-[0_2px_0_#f0c0aa]">
+				<div>
+					<span
+						style={{
+							fontFamily: "var(--font-baloo), cursive",
+							fontWeight: 800,
+							fontSize: "1.2rem",
+							color: "#d96c4a",
+						}}
+					>
+						Livão<span style={{ color: "#3d1f14" }}>Store</span>
+					</span>
+					<span
+						style={{
+							marginLeft: "0.5rem",
+							fontSize: "0.75rem",
+							fontWeight: 700,
+							color: "#c4907a",
+							letterSpacing: "2px",
+							textTransform: "uppercase" as const,
+						}}
+					>
+						admin
+					</span>
+				</div>
 				<Button
 					disabled={loggingOut}
 					onClick={handleLogout}

@@ -198,6 +198,7 @@ Quando o pedido tem `whatsapp` preenchido, exibe link clicável (verde) que abre
 
 | Arquivo | Propósito |
 |---------|-----------|
+| `app/_components/sprites.tsx` | Sprites pixel art decorativos (HeartSprite, StarSprite, LeafSprite, PeachSprite) — usados em dividers e cabeçalhos da vitrine |
 | `components/product-card.tsx` | Card de produto com badges, botão de ação, `InterestModal` |
 | `components/cart-bar.tsx` | Barra fixa no rodapé com contagem + total + botão de pedido |
 | `components/interest-modal.tsx` | Modal de registro de interesse com identificação do cliente |

@@ -124,7 +124,7 @@ export default function PedidoPage() {
 	if (!itemsLoaded) {
 		return (
 			<main className="flex min-h-screen flex-col items-center justify-center p-8">
-				<p className="text-gray-500">Carregando...</p>
+				<p className="font-bold text-[#c4907a]">Carregando...</p>
 			</main>
 		);
 	}
@@ -133,11 +133,11 @@ export default function PedidoPage() {
 		return (
 			<main className="flex min-h-screen flex-col items-center justify-center gap-4 p-8">
 				{cartNotice && (
-					<div className="w-full max-w-sm rounded border border-amber-300 bg-amber-50 p-3 text-amber-800 text-sm">
+					<div className="w-full max-w-sm rounded-lg border-2 border-[#f0c0aa] bg-[#fff8f4] p-3 text-[#8a5040] text-sm shadow-[4px_4px_0_#c4907a]">
 						{cartNotice}
 					</div>
 				)}
-				<p className="text-gray-500">Seu pedido está vazio.</p>
+				<p className="text-[#8a5040]">Seu pedido está vazio.</p>
 				<Button onClick={() => router.push("/")}>Voltar à loja</Button>
 			</main>
 		);
@@ -226,13 +226,22 @@ export default function PedidoPage() {
 
 	return (
 		<main className="mx-auto max-w-lg p-6">
-			<h1 className="mb-6 font-bold text-2xl">Seu pedido</h1>
+			<h1
+				className="mb-6 text-2xl"
+				style={{
+					fontFamily: "var(--font-baloo), cursive",
+					fontWeight: 700,
+					color: "#3d1f14",
+				}}
+			>
+				Seu pedido
+			</h1>
 
 			{cartNotice && (
-				<div className="mb-4 flex items-start justify-between rounded border border-amber-300 bg-amber-50 p-3 text-amber-800 text-sm">
+				<div className="mb-4 flex items-start justify-between rounded-lg border-2 border-[#f0c0aa] bg-[#fff8f4] p-3 text-[#8a5040] text-sm shadow-[4px_4px_0_#c4907a]">
 					<span>{cartNotice}</span>
 					<button
-						className="ml-4 shrink-0"
+						className="ml-4 shrink-0 text-[#c4907a]"
 						onClick={() => setCartNotice(null)}
 						type="button"
 					>
@@ -254,19 +263,19 @@ export default function PedidoPage() {
 							<div className="flex items-center gap-1">
 								<button
 									aria-label={`Diminuir quantidade de ${item.name}`}
-									className="flex h-6 w-6 items-center justify-center rounded border leading-none disabled:opacity-40"
+									className="flex h-6 w-6 items-center justify-center rounded-md border-2 border-[#f0c0aa] bg-[#fff8f4] text-[#8a5040] leading-none disabled:opacity-40"
 									disabled={controlsDisabled}
 									onClick={() => handleQuantityChange(item.productId, -1)}
 									type="button"
 								>
 									−
 								</button>
-								<span className="w-6 text-center font-medium">
+								<span className="w-6 text-center font-bold text-[#3d1f14]">
 									{item.quantity}
 								</span>
 								<button
 									aria-label={`Aumentar quantidade de ${item.name}`}
-									className="flex h-6 w-6 items-center justify-center rounded border leading-none disabled:opacity-40"
+									className="flex h-6 w-6 items-center justify-center rounded-md border-2 border-[#f0c0aa] bg-[#fff8f4] text-[#8a5040] leading-none disabled:opacity-40"
 									disabled={controlsDisabled || item.quantity >= maxStock}
 									onClick={() => handleQuantityChange(item.productId, 1)}
 									type="button"
@@ -274,13 +283,15 @@ export default function PedidoPage() {
 									+
 								</button>
 							</div>
-							<span className="flex-1 truncate">{item.name}</span>
-							<span className="shrink-0">
+							<span className="flex-1 truncate font-bold text-[#3d1f14]">
+								{item.name}
+							</span>
+							<span className="shrink-0 font-black text-[#d96c4a]">
 								R$ {itemTotal.toFixed(2).replace(".", ",")}
 							</span>
 							<button
 								aria-label={`Remover ${item.name}`}
-								className="shrink-0 text-gray-400 hover:text-red-500 disabled:opacity-40"
+								className="shrink-0 text-[#c4907a] hover:text-[#d96c4a] disabled:opacity-40"
 								disabled={controlsDisabled}
 								onClick={() => handleRemoveItem(item.productId)}
 								type="button"
@@ -294,15 +305,17 @@ export default function PedidoPage() {
 
 			<Separator className="my-4" />
 
-			<div className="flex justify-between font-bold">
+			<div className="flex justify-between font-black text-[#3d1f14]">
 				<span>Total</span>
-				<span>R$ {total.toFixed(2).replace(".", ",")}</span>
+				<span className="text-[#d96c4a]">
+					R$ {total.toFixed(2).replace(".", ",")}
+				</span>
 			</div>
 
 			{!confirmed ? (
 				<>
 					{errorMsg && (
-						<p className="mt-4 rounded border border-red-300 bg-red-50 p-3 text-red-700 text-sm">
+						<p className="mt-4 rounded-lg border-2 border-[#f0c0aa] bg-[#fff8f4] p-3 text-[#8a5040] text-sm shadow-[4px_4px_0_#c4907a]">
 							{errorMsg}
 						</p>
 					)}
@@ -329,13 +342,13 @@ export default function PedidoPage() {
 					{qrUrl && (
 						<div className="flex flex-col gap-3">
 							<div className="flex items-center gap-2">
-								<span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gray-900 font-bold text-white text-xs">
+								<span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#d96c4a] font-bold text-[#fff5f0] text-xs">
 									1
 								</span>
-								<p className="font-medium text-gray-900">Pague via Pix</p>
+								<p className="font-bold text-[#3d1f14]">Pague via Pix</p>
 							</div>
-							<div className="flex flex-col items-center gap-2 rounded-lg border p-4">
-								<p className="text-center text-gray-500 text-sm">
+							<div className="flex flex-col items-center gap-2 rounded-lg border-2 border-[#f0c0aa] bg-[#fff8f4] p-4 shadow-[4px_4px_0_#c4907a]">
+								<p className="text-center text-[#8a5040] text-sm">
 									Escaneie o QR Code para pagar R${" "}
 									{total.toFixed(2).replace(".", ",")}
 								</p>
@@ -346,14 +359,14 @@ export default function PedidoPage() {
 
 					<div className="flex flex-col gap-3">
 						<div className="flex items-center gap-2">
-							<span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gray-900 font-bold text-white text-xs">
+							<span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#d96c4a] font-bold text-[#fff5f0] text-xs">
 								{qrUrl ? "2" : "1"}
 							</span>
-							<p className="font-medium text-gray-900">
+							<p className="font-bold text-[#3d1f14]">
 								Envie o pedido pelo WhatsApp
 							</p>
 						</div>
-						<p className="text-gray-500 text-sm">
+						<p className="text-[#8a5040] text-sm">
 							Confirme seu pedido e envie o comprovante de pagamento.
 						</p>
 						<Button className="w-full" onClick={handleWhatsApp}>
@@ -377,7 +390,7 @@ export default function PedidoPage() {
 							className="flex flex-col gap-4"
 							onSubmit={handleModalPhoneContinue}
 						>
-							<p className="text-muted-foreground text-sm">
+							<p className="text-[#8a5040] text-sm">
 								Informe seu WhatsApp para registrar o pedido.
 							</p>
 							<div>
@@ -414,9 +427,7 @@ export default function PedidoPage() {
 							className="flex flex-col gap-4"
 							onSubmit={handleModalNameSubmit}
 						>
-							<p className="text-muted-foreground text-sm">
-								Qual é o seu nome?
-							</p>
+							<p className="text-[#8a5040] text-sm">Qual é o seu nome?</p>
 							<div>
 								<Label htmlFor="modal-name">Nome</Label>
 								<Input
@@ -430,7 +441,7 @@ export default function PedidoPage() {
 								/>
 							</div>
 							{modalError && (
-								<p className="rounded border border-red-300 bg-red-50 p-3 text-red-700 text-sm">
+								<p className="rounded-lg border-2 border-[#f0c0aa] bg-[#fff8f4] p-3 text-[#8a5040] text-sm">
 									{modalError}
 								</p>
 							)}
@@ -438,7 +449,7 @@ export default function PedidoPage() {
 								{createOrder.isPending ? "Registrando pedido..." : "Confirmar"}
 							</Button>
 							<button
-								className="text-muted-foreground text-xs underline"
+								className="text-[#c4907a] text-xs underline"
 								onClick={() => {
 									setModalStep("phone");
 									setModalPhoneError("");

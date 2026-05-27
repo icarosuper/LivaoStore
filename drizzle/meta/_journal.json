@@ -1,27 +1,27 @@
 {
-  "version": "7",
-  "dialect": "postgresql",
-  "entries": [
-    {
-      "idx": 0,
-      "version": "7",
-      "when": 1779649433945,
-      "tag": "0000_demonic_magik",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1779660248539,
-      "tag": "0001_colorful_loki",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1779825889933,
-      "tag": "0002_strange_firebrand",
-      "breakpoints": true
-    }
-  ]
+	"version": "7",
+	"dialect": "postgresql",
+	"entries": [
+		{
+			"idx": 0,
+			"version": "7",
+			"when": 1779649433945,
+			"tag": "0000_demonic_magik",
+			"breakpoints": true
+		},
+		{
+			"idx": 1,
+			"version": "7",
+			"when": 1779660248539,
+			"tag": "0001_colorful_loki",
+			"breakpoints": true
+		},
+		{
+			"idx": 2,
+			"version": "7",
+			"when": 1779825889933,
+			"tag": "0002_strange_firebrand",
+			"breakpoints": true
+		}
+	]
 }

@@ -1,12 +1,39 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { HeartSprite, LeafSprite, StarSprite } from "~/app/_components/sprites";
 import { CartBar } from "~/components/cart-bar";
 import { ProductCard } from "~/components/product-card";
 import { useCart } from "~/hooks/use-cart";
 import { useCustomer } from "~/hooks/use-customer";
 import { createSupabaseBrowserClient } from "~/lib/supabase";
 import { api } from "~/trpc/react";
+
+function StoreDivider() {
+	return (
+		<div className="my-5 flex items-center justify-center gap-2.5">
+			<div
+				className="h-0.5 max-w-20 flex-1"
+				style={{
+					background:
+						"repeating-linear-gradient(to right, #f0c0aa 0px, #f0c0aa 6px, transparent 6px, transparent 10px)",
+				}}
+			/>
+			<div className="flex items-center gap-2">
+				<HeartSprite />
+				<StarSprite />
+				<LeafSprite />
+			</div>
+			<div
+				className="h-0.5 max-w-20 flex-1"
+				style={{
+					background:
+						"repeating-linear-gradient(to right, #f0c0aa 0px, #f0c0aa 6px, transparent 6px, transparent 10px)",
+				}}
+			/>
+		</div>
+	);
+}
 
 export default function HomePage() {
 	const utils = api.useUtils();
@@ -67,8 +94,8 @@ export default function HomePage() {
 
 	if (isLoading) {
 		return (
-			<main className="min-h-screen p-8">
-				<p className="text-center text-gray-500">Carregando...</p>
+			<main className="flex min-h-screen flex-col items-center justify-center p-8">
+				<p className="font-bold text-[#c4907a]">Carregando...</p>
 			</main>
 		);
 	}
@@ -79,17 +106,44 @@ export default function HomePage() {
 
 	return (
 		<main className="min-h-screen p-6 pb-28">
-			<div className="mb-8 flex flex-col items-center gap-1">
-				<h1 className="text-center font-bold text-3xl text-gray-900">
-					Nossa loja
-				</h1>
+			{/* Logo */}
+			<header className="mb-2 flex flex-col items-center">
+				<div className="text-center">
+					<div
+						style={{
+							fontFamily: "var(--font-baloo), cursive",
+							fontSize: "clamp(1.75rem, 6vw, 2.25rem)",
+							fontWeight: 800,
+							color: "#d96c4a",
+							lineHeight: 1,
+							letterSpacing: "-0.5px",
+						}}
+					>
+						Livão<span style={{ color: "#3d1f14" }}>Store</span> 🍰
+					</div>
+					<span
+						style={{
+							fontFamily: "var(--font-nunito), sans-serif",
+							fontSize: "9px",
+							fontWeight: 700,
+							color: "#c4907a",
+							letterSpacing: "3px",
+							textTransform: "uppercase",
+							display: "block",
+							marginTop: "-2px",
+							paddingLeft: "2px",
+						}}
+					>
+						doces artesanais
+					</span>
+				</div>
 				{customer && (
-					<div className="flex items-center gap-2 text-gray-500 text-sm">
+					<div className="mt-3 flex items-center gap-2 text-[#8a5040] text-sm">
 						<span>
 							Olá, <strong>{customer.name}</strong>!
 						</span>
 						<button
-							className="text-xs underline"
+							className="text-[#c4907a] text-xs underline"
 							onClick={clearCustomer}
 							type="button"
 						>
@@ -97,9 +151,13 @@ export default function HomePage() {
 						</button>
 					</div>
 				)}
-			</div>
+			</header>
+
+			<StoreDivider />
+
+			{/* Aviso de remoção */}
 			{removedNotice.length > 0 && (
-				<div className="mb-4 flex items-start justify-between rounded border border-amber-300 bg-amber-50 p-3 text-amber-800 text-sm">
+				<div className="mb-4 flex items-start justify-between rounded-lg border-2 border-[#f0c0aa] bg-[#fff8f4] p-3 text-[#8a5040] text-sm shadow-[4px_4px_0_#c4907a]">
 					<span>
 						{removedNotice.length === 1
 							? `"${removedNotice[0]}" foi removido do carrinho pois esgotou.`
@@ -107,7 +165,7 @@ export default function HomePage() {
 					</span>
 					<button
 						aria-label="Fechar aviso"
-						className="ml-4 shrink-0"
+						className="ml-4 shrink-0 text-[#c4907a]"
 						onClick={() => setRemovedNotice([])}
 						type="button"
 					>
@@ -115,13 +173,33 @@ export default function HomePage() {
 					</button>
 				</div>
 			)}
+
+			{/* Título da seção */}
+			<div className="mb-6 flex items-center justify-center gap-2">
+				<StarSprite />
+				<h1
+					style={{
+						fontFamily: "var(--font-baloo), cursive",
+						fontWeight: 700,
+						fontSize: "1.4rem",
+						color: "#3d1f14",
+					}}
+				>
+					Nossos doces
+				</h1>
+				<StarSprite />
+			</div>
+
+			{/* Grade de produtos */}
 			{products && products.length === 0 ? (
-				<div className="flex flex-col items-center gap-3 py-20 text-gray-400">
+				<div className="flex flex-col items-center gap-3 py-20 text-[#c4907a]">
 					<span className="text-5xl">🍬</span>
-					<p className="font-medium text-lg">
+					<p className="font-bold text-[#3d1f14] text-lg">
 						Nenhum produto disponível no momento
 					</p>
-					<p className="text-sm">Volte em breve para ver nossas novidades!</p>
+					<p className="text-[#8a5040] text-sm">
+						Volte em breve para ver nossas novidades!
+					</p>
 				</div>
 			) : (
 				<div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -136,6 +214,7 @@ export default function HomePage() {
 					))}
 				</div>
 			)}
+
 			<CartBar items={cart.items} total={cart.total} />
 		</main>
 	);
