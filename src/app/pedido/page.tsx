@@ -49,8 +49,10 @@ export default function PedidoPage() {
 	const total = items.reduce((s, i) => s + parseFloat(i.price) * i.quantity, 0);
 
 	useEffect(() => {
-		const raw = sessionStorage.getItem("cart");
-		if (raw) setItems(JSON.parse(raw) as CartItem[]);
+		try {
+			const raw = localStorage.getItem("livao_cart");
+			if (raw) setItems(JSON.parse(raw) as CartItem[]);
+		} catch {}
 		setItemsLoaded(true);
 	}, []);
 
@@ -112,6 +114,7 @@ export default function PedidoPage() {
 				})),
 			});
 			const url = await generatePixQRCode(total);
+			localStorage.removeItem("livao_cart");
 			setQrUrl(url);
 			setConfirmed(true);
 		} catch (err) {
@@ -172,7 +175,7 @@ export default function PedidoPage() {
 	}
 
 	function handleFinish() {
-		sessionStorage.removeItem("cart");
+		localStorage.removeItem("livao_cart");
 		router.push("/");
 	}
 

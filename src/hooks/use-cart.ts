@@ -1,6 +1,8 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+
+const CART_KEY = "livao_cart";
 
 export type CartItem = {
 	productId: string;
@@ -10,7 +12,19 @@ export type CartItem = {
 };
 
 export function useCart() {
-	const [items, setItems] = useState<CartItem[]>([]);
+	const [items, setItems] = useState<CartItem[]>(() => {
+		if (typeof window === "undefined") return [];
+		try {
+			const raw = localStorage.getItem(CART_KEY);
+			return raw ? (JSON.parse(raw) as CartItem[]) : [];
+		} catch {
+			return [];
+		}
+	});
+
+	useEffect(() => {
+		localStorage.setItem(CART_KEY, JSON.stringify(items));
+	}, [items]);
 
 	const addItem = useCallback((product: Omit<CartItem, "quantity">) => {
 		setItems((prev) => {
@@ -40,7 +54,10 @@ export function useCart() {
 		);
 	}, []);
 
-	const clear = useCallback(() => setItems([]), []);
+	const clear = useCallback(() => {
+		setItems([]);
+		localStorage.removeItem(CART_KEY);
+	}, []);
 
 	const total = items.reduce(
 		(sum, i) => sum + parseFloat(i.price) * i.quantity,

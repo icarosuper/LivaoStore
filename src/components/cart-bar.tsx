@@ -21,15 +21,7 @@ export function CartBar({ items, total }: Props) {
 				{count} {count === 1 ? "item" : "itens"} —{" "}
 				<strong>R$ {total.toFixed(2).replace(".", ",")}</strong>
 			</span>
-			<Button
-				onClick={() => {
-					if (typeof window !== "undefined") {
-						sessionStorage.setItem("cart", JSON.stringify(items));
-					}
-					router.push("/pedido");
-				}}
-				size="lg"
-			>
+			<Button onClick={() => router.push("/pedido")} size="lg">
 				Ver pedido
 			</Button>
 		</div>
