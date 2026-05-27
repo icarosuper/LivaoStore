@@ -92,7 +92,9 @@
 @layer base {
 	html {
 		color-scheme: light only;
-		@apply font-sans;
+		font-family: var(--font-nunito), ui-sans-serif, system-ui, sans-serif,
+			"Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
+			"Noto Color Emoji";
 	}
 	* {
 		@apply border-border outline-ring/50;

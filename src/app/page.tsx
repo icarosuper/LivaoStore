@@ -202,7 +202,7 @@ export default function HomePage() {
 					</p>
 				</div>
 			) : (
-				<div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+				<div className="mx-auto grid w-full max-w-6xl grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
 					{products?.map((product) => (
 						<ProductCard
 							cartQuantity={cartQuantityMap.get(product.id) ?? 0}

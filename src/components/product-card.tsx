@@ -67,7 +67,7 @@ export function ProductCard({
 				</div>
 
 				{/* Área da imagem */}
-				<div className="relative h-48 w-full bg-gradient-to-br from-[#fce4da] to-[#f4a261]">
+				<div className="relative aspect-video w-full shrink-0 bg-gradient-to-br from-[#fce4da] to-[#f4a261]">
 					{product.imageUrl ? (
 						<Image
 							alt={product.name}
@@ -83,8 +83,8 @@ export function ProductCard({
 				</div>
 
 				{/* Corpo do card */}
-				<div className="flex flex-1 flex-col gap-2 p-4">
-					<h3 className="font-bold text-[#3d1f14] text-lg leading-tight">
+				<div className="flex flex-1 flex-col gap-1.5 p-3">
+					<h3 className="font-bold text-[#3d1f14] text-base leading-tight">
 						{product.name}
 					</h3>
 					{product.description && (
@@ -93,7 +93,7 @@ export function ProductCard({
 						</p>
 					)}
 					<div className="mt-auto flex items-center justify-between pt-1">
-						<p className="font-black text-2xl text-[#d96c4a]">
+						<p className="font-black text-xl text-[#d96c4a]">
 							R$ {parseFloat(product.price).toFixed(2).replace(".", ",")}
 						</p>
 					</div>
