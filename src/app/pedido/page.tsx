@@ -23,6 +23,9 @@ import { api } from "~/trpc/react";
 export default function PedidoPage() {
 	const router = useRouter();
 	const [items, setItems] = useState<CartItem[]>([]);
+	const [itemsLoaded, setItemsLoaded] = useState(false);
+	const [reconciled, setReconciled] = useState(false);
+	const [cartNotice, setCartNotice] = useState<string | null>(null);
 	const [qrUrl, setQrUrl] = useState<string | null>(null);
 	const [confirmed, setConfirmed] = useState(false);
 	const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -35,6 +38,7 @@ export default function PedidoPage() {
 	const [modalPhoneError, setModalPhoneError] = useState("");
 	const [modalError, setModalError] = useState<string | null>(null);
 
+	const { data: products } = api.products.list.useQuery();
 	const createOrder = api.orders.create.useMutation();
 
 	const lookupQuery = api.interests.lookupCustomer.useQuery(
@@ -47,7 +51,43 @@ export default function PedidoPage() {
 	useEffect(() => {
 		const raw = sessionStorage.getItem("cart");
 		if (raw) setItems(JSON.parse(raw) as CartItem[]);
+		setItemsLoaded(true);
 	}, []);
+
+	useEffect(() => {
+		if (reconciled || !itemsLoaded || !products) return;
+		const stockMap = new Map(products.map((p) => [p.id, p.availableStock]));
+		const kept: CartItem[] = [];
+		const removed: string[] = [];
+		const adjusted: string[] = [];
+		for (const item of items) {
+			const stock = stockMap.get(item.productId) ?? 0;
+			if (stock === 0) {
+				removed.push(item.name);
+			} else if (item.quantity > stock) {
+				kept.push({ ...item, quantity: stock });
+				adjusted.push(item.name);
+			} else {
+				kept.push(item);
+			}
+		}
+		setItems(kept);
+		setReconciled(true);
+		const parts: string[] = [];
+		if (removed.length > 0)
+			parts.push(
+				removed.length === 1
+					? `"${removed[0]}" foi removido pois esgotou`
+					: `${removed.length} itens foram removidos pois esgotaram`,
+			);
+		if (adjusted.length > 0)
+			parts.push(
+				adjusted.length === 1
+					? `a quantidade de "${adjusted[0]}" foi reduzida ao máximo disponível`
+					: `a quantidade de ${adjusted.length} itens foi reduzida ao máximo disponível`,
+			);
+		if (parts.length > 0) setCartNotice(`${parts.join(" e ")}.`);
+	}, [products, items, itemsLoaded, reconciled]);
 
 	if (items.length === 0) {
 		return (
@@ -139,6 +179,19 @@ export default function PedidoPage() {
 	return (
 		<main className="mx-auto max-w-lg p-6">
 			<h1 className="mb-6 font-bold text-2xl">Seu pedido</h1>
+
+			{cartNotice && (
+				<div className="mb-4 flex items-start justify-between rounded border border-amber-300 bg-amber-50 p-3 text-amber-800 text-sm">
+					<span>{cartNotice}</span>
+					<button
+						className="ml-4 shrink-0"
+						onClick={() => setCartNotice(null)}
+						type="button"
+					>
+						✕
+					</button>
+				</div>
+			)}
 
 			<div className="flex flex-col gap-3">
 				{items.map((item) => (
