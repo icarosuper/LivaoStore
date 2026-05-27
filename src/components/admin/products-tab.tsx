@@ -51,7 +51,8 @@ type ProductRow = {
 
 export function ProductsTab() {
 	const utils = api.useUtils();
-	const { data: products } = api.products.adminList.useQuery();
+	const { data: products, isLoading: productsLoading } =
+		api.products.adminList.useQuery();
 	const { data: interestCounts } = api.interests.allCounts.useQuery();
 	const [createOpen, setCreateOpen] = useState(false);
 	const [editProduct, setEditProduct] = useState<ProductRow | null>(null);
@@ -60,6 +61,9 @@ export function ProductsTab() {
 		null,
 	);
 	const [togglingId, setTogglingId] = useState<string | null>(null);
+	const [notifyingInterestId, setNotifyingInterestId] = useState<string | null>(
+		null,
+	);
 	const [addStockProductId, setAddStockProductId] = useState<string | null>(
 		null,
 	);
@@ -134,6 +138,7 @@ export function ProductsTab() {
 	});
 	const markNotified = api.interests.markNotified.useMutation({
 		onSuccess: () => void utils.interests.listByProduct.invalidate(),
+		onSettled: () => setNotifyingInterestId(null),
 	});
 
 	function handleToggle(id: string) {
@@ -141,10 +146,11 @@ export function ProductsTab() {
 		toggle.mutate({ id });
 	}
 
-	const { data: interests } = api.interests.listByProduct.useQuery(
-		{ productId: interestProductId ?? "" },
-		{ enabled: !!interestProductId },
-	);
+	const { data: interests, isLoading: interestsLoading } =
+		api.interests.listByProduct.useQuery(
+			{ productId: interestProductId ?? "" },
+			{ enabled: !!interestProductId },
+		);
 
 	function handleCreate(v: ProductFormValues) {
 		create.mutate({
@@ -201,6 +207,11 @@ export function ProductsTab() {
 
 			{/* Mobile cards */}
 			<div className="flex flex-col gap-3 sm:hidden">
+				{productsLoading && (
+					<div className="flex items-center justify-center py-8">
+						<Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+					</div>
+				)}
 				{products?.map((p) => (
 					<div
 						className="flex flex-col gap-3 rounded-lg border bg-white p-4"
@@ -265,6 +276,13 @@ export function ProductsTab() {
 						</TableRow>
 					</TableHeader>
 					<TableBody>
+						{productsLoading && (
+							<TableRow>
+								<TableCell className="py-8 text-center" colSpan={5}>
+									<Loader2 className="mx-auto h-6 w-6 animate-spin text-muted-foreground" />
+								</TableCell>
+							</TableRow>
+						)}
 						{products?.map((p) => (
 							<TableRow key={p.id}>
 								<TableCell>{p.name}</TableCell>
@@ -361,9 +379,10 @@ export function ProductsTab() {
 					<AlertDialogFooter>
 						<AlertDialogCancel>Cancelar</AlertDialogCancel>
 						<AlertDialogAction
+							disabled={del.isPending}
 							onClick={() => deleteId && del.mutate({ id: deleteId })}
 						>
-							Excluir
+							{del.isPending ? "Excluindo..." : "Excluir"}
 						</AlertDialogAction>
 					</AlertDialogFooter>
 				</AlertDialogContent>
@@ -377,7 +396,12 @@ export function ProductsTab() {
 					<DialogHeader>
 						<DialogTitle>Interessados</DialogTitle>
 					</DialogHeader>
-					{interests?.length === 0 && (
+					{interestsLoading && (
+						<div className="flex items-center justify-center py-4">
+							<Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+						</div>
+					)}
+					{!interestsLoading && interests?.length === 0 && (
 						<p className="text-muted-foreground text-sm">
 							Nenhum interessado ainda.
 						</p>
@@ -399,17 +423,25 @@ export function ProductsTab() {
 								</div>
 								<Button
 									className={i.notifiedAt ? "text-muted-foreground" : ""}
+									disabled={notifyingInterestId === i.id}
 									onClick={() => {
 										window.open(
 											`https://wa.me/${i.whatsapp}?text=${encodeURIComponent(`Olá ${i.customerName}! O produto que você se interessou voltou ao estoque. Acesse nossa loja para pedir!`)}`,
 											"_blank",
 										);
-										if (!i.notifiedAt) markNotified.mutate({ id: i.id });
+										if (!i.notifiedAt) {
+											setNotifyingInterestId(i.id);
+											markNotified.mutate({ id: i.id });
+										}
 									}}
 									size="sm"
 									variant={i.notifiedAt ? "ghost" : "outline"}
 								>
-									{i.notifiedAt ? "✓ Avisado" : "Avisar"}
+									{notifyingInterestId === i.id
+										? "Avisando..."
+										: i.notifiedAt
+											? "✓ Avisado"
+											: "Avisar"}
 								</Button>
 							</div>
 						))}
@@ -428,6 +460,7 @@ export function ProductsTab() {
 					<div className="py-2">
 						<Label htmlFor="add-stock-qty">Quantidade a adicionar</Label>
 						<Input
+							disabled={addStock.isPending}
 							id="add-stock-qty"
 							min={1}
 							onChange={(e) => setAddStockQty(parseInt(e.target.value, 10))}

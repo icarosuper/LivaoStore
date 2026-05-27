@@ -383,6 +383,7 @@ export default function PedidoPage() {
 							<div>
 								<Label htmlFor="modal-phone">WhatsApp (com DDD)</Label>
 								<Input
+									disabled={lookupQuery.isFetching || createOrder.isPending}
 									id="modal-phone"
 									inputMode="numeric"
 									maxLength={13}
@@ -419,6 +420,7 @@ export default function PedidoPage() {
 							<div>
 								<Label htmlFor="modal-name">Nome</Label>
 								<Input
+									disabled={createOrder.isPending}
 									id="modal-name"
 									maxLength={100}
 									minLength={2}

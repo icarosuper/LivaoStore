@@ -1,5 +1,6 @@
 "use client";
 
+import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ManualOrderDialog } from "~/components/admin/manual-order-dialog";
 import { Badge } from "~/components/ui/badge";
@@ -57,8 +58,9 @@ export function OrdersTab() {
 	const [page, setPage] = useState(1);
 	const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
 	const [showManualOrder, setShowManualOrder] = useState(false);
+	const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
 
-	const { data } = api.orders.list.useQuery({
+	const { data, isLoading: ordersLoading } = api.orders.list.useQuery({
 		page,
 		pageSize: PAGE_SIZE,
 		status: filters.status || undefined,
@@ -93,6 +95,7 @@ export function OrdersTab() {
 
 	const setStatus = api.orders.setStatus.useMutation({
 		onSuccess: () => void utils.orders.list.invalidate(),
+		onSettled: () => setUpdatingOrderId(null),
 	});
 
 	function setFilter<K extends keyof Filters>(k: K, v: Filters[K]) {
@@ -232,42 +235,71 @@ export function OrdersTab() {
 									<Button
 										className="flex-1"
 										disabled={setStatus.isPending}
-										onClick={() =>
-											setStatus.mutate({ id: o.id, status: "paid" })
-										}
+										onClick={() => {
+											setUpdatingOrderId(o.id);
+											setStatus.mutate({ id: o.id, status: "paid" });
+										}}
 										size="sm"
 									>
-										Marcar como Pago
+										{updatingOrderId === o.id ? (
+											<>
+												<Loader2 className="mr-1 h-3 w-3 animate-spin" />
+												Atualizando...
+											</>
+										) : (
+											"Marcar como Pago"
+										)}
 									</Button>
 								)}
 								{o.status === "paid" && (
 									<Button
 										className="flex-1"
 										disabled={setStatus.isPending}
-										onClick={() =>
-											setStatus.mutate({ id: o.id, status: "delivered" })
-										}
+										onClick={() => {
+											setUpdatingOrderId(o.id);
+											setStatus.mutate({ id: o.id, status: "delivered" });
+										}}
 										size="sm"
 									>
-										Marcar como Entregue
+										{updatingOrderId === o.id ? (
+											<>
+												<Loader2 className="mr-1 h-3 w-3 animate-spin" />
+												Atualizando...
+											</>
+										) : (
+											"Marcar como Entregue"
+										)}
 									</Button>
 								)}
 								<Button
 									className="flex-1"
 									disabled={setStatus.isPending}
-									onClick={() =>
-										setStatus.mutate({ id: o.id, status: "cancelled" })
-									}
+									onClick={() => {
+										setUpdatingOrderId(o.id);
+										setStatus.mutate({ id: o.id, status: "cancelled" });
+									}}
 									size="sm"
 									variant="destructive"
 								>
-									Cancelar
+									{updatingOrderId === o.id ? (
+										<>
+											<Loader2 className="mr-1 h-3 w-3 animate-spin" />
+											Atualizando...
+										</>
+									) : (
+										"Cancelar"
+									)}
 								</Button>
 							</div>
 						)}
 					</div>
 				))}
-				{orders.length === 0 && (
+				{ordersLoading && (
+					<div className="flex items-center justify-center py-8">
+						<Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+					</div>
+				)}
+				{!ordersLoading && orders.length === 0 && (
 					<p className="text-center text-muted-foreground text-sm">
 						Nenhum pedido encontrado.
 					</p>
@@ -289,6 +321,13 @@ export function OrdersTab() {
 						</TableRow>
 					</TableHeader>
 					<TableBody>
+						{ordersLoading && (
+							<TableRow>
+								<TableCell className="py-8 text-center" colSpan={7}>
+									<Loader2 className="mx-auto h-6 w-6 animate-spin text-muted-foreground" />
+								</TableCell>
+							</TableRow>
+						)}
 						{orders.map((o) => (
 							<TableRow key={o.id}>
 								<TableCell className="text-sm">
@@ -334,36 +373,60 @@ export function OrdersTab() {
 												<Button
 													className="flex-1"
 													disabled={setStatus.isPending}
-													onClick={() =>
-														setStatus.mutate({ id: o.id, status: "paid" })
-													}
+													onClick={() => {
+														setUpdatingOrderId(o.id);
+														setStatus.mutate({ id: o.id, status: "paid" });
+													}}
 													size="sm"
 												>
-													Marcar como Pago
+													{updatingOrderId === o.id ? (
+														<>
+															<Loader2 className="mr-1 h-3 w-3 animate-spin" />
+															Atualizando...
+														</>
+													) : (
+														"Marcar como Pago"
+													)}
 												</Button>
 											)}
 											{o.status === "paid" && (
 												<Button
 													className="flex-1"
 													disabled={setStatus.isPending}
-													onClick={() =>
-														setStatus.mutate({ id: o.id, status: "delivered" })
-													}
+													onClick={() => {
+														setUpdatingOrderId(o.id);
+														setStatus.mutate({ id: o.id, status: "delivered" });
+													}}
 													size="sm"
 												>
-													Marcar como Entregue
+													{updatingOrderId === o.id ? (
+														<>
+															<Loader2 className="mr-1 h-3 w-3 animate-spin" />
+															Atualizando...
+														</>
+													) : (
+														"Marcar como Entregue"
+													)}
 												</Button>
 											)}
 											<Button
 												className="flex-1"
 												disabled={setStatus.isPending}
-												onClick={() =>
-													setStatus.mutate({ id: o.id, status: "cancelled" })
-												}
+												onClick={() => {
+													setUpdatingOrderId(o.id);
+													setStatus.mutate({ id: o.id, status: "cancelled" });
+												}}
 												size="sm"
 												variant="destructive"
 											>
-												Cancelar
+												{updatingOrderId === o.id ? (
+													<>
+														<Loader2 className="mr-1 h-3 w-3 animate-spin" />
+														Atualizando...
+													</>
+												) : (
+													"Cancelar"
+												)}
 											</Button>
 										</div>
 									)}

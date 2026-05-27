@@ -1,5 +1,6 @@
 "use client";
 
+import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "~/components/ui/button";
 import {
@@ -35,7 +36,7 @@ export function InterestModal({
 	const [name, setName] = useState("");
 	const [phoneError, setPhoneError] = useState("");
 
-	// eslint-disable-next-line react-hooks/exhaustive-deps
+	// biome-ignore lint/correctness/useExhaustiveDependencies: runs only on open change, intentional
 	useEffect(() => {
 		if (!open) return;
 		setPhoneError("");
@@ -111,7 +112,8 @@ export function InterestModal({
 				</DialogHeader>
 
 				{step === "loading" && (
-					<div className="flex flex-col gap-4">
+					<div className="flex flex-col items-center gap-4 py-2">
+						<Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
 						<p className="text-muted-foreground text-sm">
 							Registrando seu interesse em <strong>{productName}</strong>...
 						</p>
@@ -127,6 +129,7 @@ export function InterestModal({
 						<div>
 							<Label htmlFor="phone">WhatsApp (com DDD)</Label>
 							<Input
+								disabled={isPending}
 								id="phone"
 								inputMode="numeric"
 								maxLength={13}
@@ -151,6 +154,7 @@ export function InterestModal({
 						<div>
 							<Label htmlFor="name">Nome</Label>
 							<Input
+								disabled={register.isPending}
 								id="name"
 								maxLength={100}
 								minLength={2}
