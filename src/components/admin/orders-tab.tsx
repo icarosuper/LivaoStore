@@ -1,11 +1,16 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
+import { CircleDollarSign, Loader2, PackageCheck, XCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ManualOrderDialog } from "~/components/admin/manual-order-dialog";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from "~/components/ui/popover";
 import {
 	Table,
 	TableBody,
@@ -14,6 +19,11 @@ import {
 	TableHeader,
 	TableRow,
 } from "~/components/ui/table";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from "~/components/ui/tooltip";
 import { createSupabaseBrowserClient } from "~/lib/supabase";
 import { buildCustomerWhatsAppUrl } from "~/lib/whatsapp";
 import { api } from "~/trpc/react";
@@ -315,9 +325,9 @@ export function OrdersTab() {
 							<TableHead>Cliente</TableHead>
 							<TableHead>WhatsApp</TableHead>
 							<TableHead>Itens</TableHead>
-							<TableHead>Total</TableHead>
-							<TableHead>Status</TableHead>
-							<TableHead>Ações</TableHead>
+							<TableHead className="text-center">Total</TableHead>
+							<TableHead className="text-center">Status</TableHead>
+							<TableHead className="text-center">Ações</TableHead>
 						</TableRow>
 					</TableHeader>
 					<TableBody>
@@ -350,15 +360,26 @@ export function OrdersTab() {
 										"—"
 									)}
 								</TableCell>
-								<TableCell className="text-sm">
-									{o.items
-										.map((i) => `${i.quantity}x ${i.productName}`)
-										.join(", ")}
-								</TableCell>
 								<TableCell>
+									<Popover>
+										<PopoverTrigger className="cursor-pointer text-left text-muted-foreground text-sm underline-offset-2 hover:underline">
+											{o.items.length} {o.items.length === 1 ? "item" : "itens"}
+										</PopoverTrigger>
+										<PopoverContent align="start" className="w-56 p-3">
+											<ul className="flex flex-col gap-1">
+												{o.items.map((i) => (
+													<li className="text-sm" key={i.productId}>
+														{i.quantity}x {i.productName}
+													</li>
+												))}
+											</ul>
+										</PopoverContent>
+									</Popover>
+								</TableCell>
+								<TableCell className="text-center">
 									R$ {parseFloat(o.total).toFixed(2).replace(".", ",")}
 								</TableCell>
-								<TableCell>
+								<TableCell className="text-center">
 									<Badge
 										className={statusClassName[o.status]}
 										variant="outline"
@@ -366,70 +387,68 @@ export function OrdersTab() {
 										{statusLabel[o.status]}
 									</Badge>
 								</TableCell>
-								<TableCell className="flex gap-2">
-									{(o.status === "pending" || o.status === "paid") && (
-										<div className="flex gap-2">
-											{o.status === "pending" && (
-												<Button
-													className="flex-1"
-													disabled={setStatus.isPending}
-													onClick={() => {
-														setUpdatingOrderId(o.id);
-														setStatus.mutate({ id: o.id, status: "paid" });
-													}}
-													size="sm"
-												>
-													{updatingOrderId === o.id ? (
-														<>
-															<Loader2 className="mr-1 h-3 w-3 animate-spin" />
-															Atualizando...
-														</>
-													) : (
-														"Marcar como Pago"
-													)}
-												</Button>
-											)}
-											{o.status === "paid" && (
-												<Button
-													className="flex-1"
-													disabled={setStatus.isPending}
-													onClick={() => {
-														setUpdatingOrderId(o.id);
-														setStatus.mutate({ id: o.id, status: "delivered" });
-													}}
-													size="sm"
-												>
-													{updatingOrderId === o.id ? (
-														<>
-															<Loader2 className="mr-1 h-3 w-3 animate-spin" />
-															Atualizando...
-														</>
-													) : (
-														"Marcar como Entregue"
-													)}
-												</Button>
-											)}
-											<Button
-												className="flex-1"
-												disabled={setStatus.isPending}
-												onClick={() => {
-													setUpdatingOrderId(o.id);
-													setStatus.mutate({ id: o.id, status: "cancelled" });
-												}}
-												size="sm"
-												variant="destructive"
-											>
-												{updatingOrderId === o.id ? (
-													<>
-														<Loader2 className="mr-1 h-3 w-3 animate-spin" />
-														Atualizando...
-													</>
-												) : (
-													"Cancelar"
+								<TableCell>
+									<div className="flex items-center justify-center gap-1">
+										{updatingOrderId === o.id ? (
+											<Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+										) : (
+											<>
+												{o.status === "pending" && (
+													<Tooltip>
+														<TooltipTrigger
+															className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-md hover:bg-accent disabled:pointer-events-none disabled:opacity-50"
+															disabled={setStatus.isPending}
+															onClick={() => {
+																setUpdatingOrderId(o.id);
+																setStatus.mutate({ id: o.id, status: "paid" });
+															}}
+														>
+															<CircleDollarSign className="h-4 w-4 text-green-600" />
+														</TooltipTrigger>
+														<TooltipContent>Marcar como Pago</TooltipContent>
+													</Tooltip>
 												)}
-											</Button>
-										</div>
-									)}
+												{o.status === "paid" && (
+													<Tooltip>
+														<TooltipTrigger
+															className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-md hover:bg-accent disabled:pointer-events-none disabled:opacity-50"
+															disabled={setStatus.isPending}
+															onClick={() => {
+																setUpdatingOrderId(o.id);
+																setStatus.mutate({
+																	id: o.id,
+																	status: "delivered",
+																});
+															}}
+														>
+															<PackageCheck className="h-4 w-4 text-blue-600" />
+														</TooltipTrigger>
+														<TooltipContent>
+															Marcar como Entregue
+														</TooltipContent>
+													</Tooltip>
+												)}
+												{(o.status === "pending" || o.status === "paid") && (
+													<Tooltip>
+														<TooltipTrigger
+															className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-md hover:bg-accent disabled:pointer-events-none disabled:opacity-50"
+															disabled={setStatus.isPending}
+															onClick={() => {
+																setUpdatingOrderId(o.id);
+																setStatus.mutate({
+																	id: o.id,
+																	status: "cancelled",
+																});
+															}}
+														>
+															<XCircle className="h-4 w-4 text-red-500" />
+														</TooltipTrigger>
+														<TooltipContent>Cancelar pedido</TooltipContent>
+													</Tooltip>
+												)}
+											</>
+										)}
+									</div>
 								</TableCell>
 							</TableRow>
 						))}

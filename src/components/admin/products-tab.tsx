@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
+import { Bell, Loader2, PackagePlus, Pencil, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
 	ProductForm,
@@ -34,6 +34,11 @@ import {
 	TableHeader,
 	TableRow,
 } from "~/components/ui/table";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from "~/components/ui/tooltip";
 import { createSupabaseBrowserClient } from "~/lib/supabase";
 import { api } from "~/trpc/react";
 
@@ -170,34 +175,6 @@ export function ProductsTab() {
 		});
 	}
 
-	function InterestButton({ productId }: { productId: string }) {
-		const c = countMap[productId];
-		return (
-			<Button
-				onClick={() => setInterestProductId(productId)}
-				size="sm"
-				variant="outline"
-			>
-				Interessados ({c ?? 0})
-			</Button>
-		);
-	}
-
-	function AddStockButton({ productId }: { productId: string }) {
-		return (
-			<Button
-				onClick={() => {
-					setAddStockQty(1);
-					setAddStockProductId(productId);
-				}}
-				size="sm"
-				variant="outline"
-			>
-				Adicionar estoque
-			</Button>
-		);
-	}
-
 	return (
 		<div className="flex flex-col gap-4">
 			<div className="flex items-center justify-between">
@@ -249,8 +226,23 @@ export function ProductsTab() {
 							>
 								Editar
 							</Button>
-							<InterestButton productId={p.id} />
-							<AddStockButton productId={p.id} />
+							<Button
+								onClick={() => setInterestProductId(p.id)}
+								size="sm"
+								variant="outline"
+							>
+								Interessados ({countMap[p.id] ?? 0})
+							</Button>
+							<Button
+								onClick={() => {
+									setAddStockQty(1);
+									setAddStockProductId(p.id);
+								}}
+								size="sm"
+								variant="outline"
+							>
+								Adicionar estoque
+							</Button>
 							<Button
 								onClick={() => setDeleteId(p.id)}
 								size="sm"
@@ -269,10 +261,10 @@ export function ProductsTab() {
 					<TableHeader>
 						<TableRow>
 							<TableHead>Nome</TableHead>
-							<TableHead>Preço</TableHead>
-							<TableHead>Estoque</TableHead>
-							<TableHead>Ativo</TableHead>
-							<TableHead>Ações</TableHead>
+							<TableHead className="text-center">Preço</TableHead>
+							<TableHead className="text-center">Estoque</TableHead>
+							<TableHead className="text-center">Ativo</TableHead>
+							<TableHead className="text-center">Ações</TableHead>
 						</TableRow>
 					</TableHeader>
 					<TableBody>
@@ -286,10 +278,10 @@ export function ProductsTab() {
 						{products?.map((p) => (
 							<TableRow key={p.id}>
 								<TableCell>{p.name}</TableCell>
-								<TableCell>
+								<TableCell className="text-center">
 									R$ {parseFloat(p.price).toFixed(2).replace(".", ",")}
 								</TableCell>
-								<TableCell>
+								<TableCell className="text-center">
 									{p.availableStock}/{p.quantity}
 									{p.availableStock === 0 && (
 										<Badge className="ml-2" variant="destructive">
@@ -297,33 +289,70 @@ export function ProductsTab() {
 										</Badge>
 									)}
 								</TableCell>
-								<TableCell>
+								<TableCell className="text-center">
 									{togglingId === p.id ? (
-										<Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+										<Loader2 className="mx-auto h-5 w-5 animate-spin text-muted-foreground" />
 									) : (
-										<Switch
-											checked={p.active}
-											onCheckedChange={() => handleToggle(p.id)}
-										/>
+										<div className="flex justify-center">
+											<Switch
+												checked={p.active}
+												onCheckedChange={() => handleToggle(p.id)}
+											/>
+										</div>
 									)}
 								</TableCell>
-								<TableCell className="flex gap-2">
-									<Button
-										onClick={() => setEditProduct(p)}
-										size="sm"
-										variant="outline"
-									>
-										Editar
-									</Button>
-									<InterestButton productId={p.id} />
-									<AddStockButton productId={p.id} />
-									<Button
-										onClick={() => setDeleteId(p.id)}
-										size="sm"
-										variant="destructive"
-									>
-										Excluir
-									</Button>
+								<TableCell>
+									<div className="flex items-center justify-center gap-1">
+										<Tooltip>
+											<TooltipTrigger
+												className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-md hover:bg-accent disabled:pointer-events-none disabled:opacity-50"
+												onClick={() => setEditProduct(p)}
+											>
+												<Pencil className="h-4 w-4 text-muted-foreground" />
+											</TooltipTrigger>
+											<TooltipContent>Editar produto</TooltipContent>
+										</Tooltip>
+
+										<Tooltip>
+											<TooltipTrigger
+												className="inline-flex h-8 cursor-pointer items-center justify-center gap-1 rounded-md px-2 hover:bg-accent disabled:pointer-events-none disabled:opacity-50"
+												onClick={() => setInterestProductId(p.id)}
+											>
+												<Bell className="h-4 w-4 text-amber-500" />
+												{(countMap[p.id] ?? 0) > 0 && (
+													<span className="font-medium text-amber-500 text-xs">
+														{countMap[p.id]}
+													</span>
+												)}
+											</TooltipTrigger>
+											<TooltipContent>
+												Interessados ({countMap[p.id] ?? 0})
+											</TooltipContent>
+										</Tooltip>
+
+										<Tooltip>
+											<TooltipTrigger
+												className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-md hover:bg-accent disabled:pointer-events-none disabled:opacity-50"
+												onClick={() => {
+													setAddStockQty(1);
+													setAddStockProductId(p.id);
+												}}
+											>
+												<PackagePlus className="h-4 w-4 text-green-600" />
+											</TooltipTrigger>
+											<TooltipContent>Adicionar estoque</TooltipContent>
+										</Tooltip>
+
+										<Tooltip>
+											<TooltipTrigger
+												className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-md hover:bg-accent disabled:pointer-events-none disabled:opacity-50"
+												onClick={() => setDeleteId(p.id)}
+											>
+												<Trash2 className="h-4 w-4 text-red-500" />
+											</TooltipTrigger>
+											<TooltipContent>Excluir produto</TooltipContent>
+										</Tooltip>
+									</div>
 								</TableCell>
 							</TableRow>
 						))}

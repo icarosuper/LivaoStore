@@ -2,7 +2,7 @@ import "~/styles/globals.css";
 
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
-
+import { TooltipProvider } from "~/components/ui/tooltip";
 import { WhatsAppFab } from "~/components/whatsapp-fab";
 import { TRPCReactProvider } from "~/trpc/react";
 
@@ -24,8 +24,10 @@ export default function RootLayout({
 		<html className={`${geist.variable}`} lang="pt-BR">
 			<body suppressHydrationWarning>
 				<TRPCReactProvider>
-					{children}
-					<WhatsAppFab />
+					<TooltipProvider>
+						{children}
+						<WhatsAppFab />
+					</TooltipProvider>
 				</TRPCReactProvider>
 			</body>
 		</html>
