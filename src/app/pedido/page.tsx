@@ -225,9 +225,9 @@ export default function PedidoPage() {
 	}
 
 	return (
-		<main className="mx-auto max-w-lg p-6">
+		<main className="mx-auto max-w-2xl p-8">
 			<h1
-				className="mb-6 text-2xl"
+				className="mb-8 text-3xl"
 				style={{
 					fontFamily: "var(--font-baloo), cursive",
 					fontWeight: 700,
@@ -250,32 +250,28 @@ export default function PedidoPage() {
 				</div>
 			)}
 
-			<div className="flex flex-col gap-3">
+			<div className="flex flex-col gap-4">
 				{items.map((item) => {
 					const maxStock = stockMap.get(item.productId) ?? 0;
 					const itemTotal = parseFloat(item.price) * item.quantity;
 					const controlsDisabled = confirmed || createOrder.isPending;
-					return (
-						<div
-							className="flex items-center gap-2 text-sm"
-							key={item.productId}
-						>
-							<div className="flex items-center gap-1">
+					const quantityControls = (
+							<div className="flex items-center gap-2">
 								<button
 									aria-label={`Diminuir quantidade de ${item.name}`}
-									className="flex h-6 w-6 items-center justify-center rounded-md border-2 border-[#f0c0aa] bg-[#fff8f4] text-[#8a5040] leading-none disabled:opacity-40"
+									className="flex h-8 w-8 items-center justify-center rounded-md border-2 border-[#f0c0aa] bg-[#fff8f4] text-[#8a5040] leading-none disabled:opacity-40"
 									disabled={controlsDisabled}
 									onClick={() => handleQuantityChange(item.productId, -1)}
 									type="button"
 								>
 									−
 								</button>
-								<span className="w-6 text-center font-bold text-[#3d1f14]">
+								<span className="w-8 text-center font-bold text-[#3d1f14]">
 									{item.quantity}
 								</span>
 								<button
 									aria-label={`Aumentar quantidade de ${item.name}`}
-									className="flex h-6 w-6 items-center justify-center rounded-md border-2 border-[#f0c0aa] bg-[#fff8f4] text-[#8a5040] leading-none disabled:opacity-40"
+									className="flex h-8 w-8 items-center justify-center rounded-md border-2 border-[#f0c0aa] bg-[#fff8f4] text-[#8a5040] leading-none disabled:opacity-40"
 									disabled={controlsDisabled || item.quantity >= maxStock}
 									onClick={() => handleQuantityChange(item.productId, 1)}
 									type="button"
@@ -283,12 +279,8 @@ export default function PedidoPage() {
 									+
 								</button>
 							</div>
-							<span className="flex-1 truncate font-bold text-[#3d1f14]">
-								{item.name}
-							</span>
-							<span className="shrink-0 font-black text-[#d96c4a]">
-								R$ {itemTotal.toFixed(2).replace(".", ",")}
-							</span>
+						);
+					const removeButton = (
 							<button
 								aria-label={`Remover ${item.name}`}
 								className="shrink-0 text-[#c4907a] hover:text-[#d96c4a] disabled:opacity-40"
@@ -298,6 +290,33 @@ export default function PedidoPage() {
 							>
 								✕
 							</button>
+						);
+					return (
+						<div key={item.productId}>
+							{/* mobile: card */}
+							<div className="rounded-xl border-2 border-[#f0c0aa] bg-[#fff8f4] p-3 sm:hidden">
+								<div className="mb-2 flex items-center justify-between gap-2">
+									<span className="font-bold text-[#3d1f14]">{item.name}</span>
+									{removeButton}
+								</div>
+								<div className="flex items-center justify-between">
+									{quantityControls}
+									<span className="font-black text-[#d96c4a]">
+										R$ {itemTotal.toFixed(2).replace(".", ",")}
+									</span>
+								</div>
+							</div>
+							{/* desktop: row */}
+							<div className="hidden items-center gap-3 text-base sm:flex">
+								{quantityControls}
+								<span className="flex-1 font-bold text-[#3d1f14]">
+									{item.name}
+								</span>
+								<span className="shrink-0 font-black text-[#d96c4a]">
+									R$ {itemTotal.toFixed(2).replace(".", ",")}
+								</span>
+								{removeButton}
+							</div>
 						</div>
 					);
 				})}
@@ -305,7 +324,7 @@ export default function PedidoPage() {
 
 			<Separator className="my-4" />
 
-			<div className="flex justify-between font-black text-[#3d1f14]">
+			<div className="flex justify-between text-lg font-black text-[#3d1f14]">
 				<span>Total</span>
 				<span className="text-[#d96c4a]">
 					R$ {total.toFixed(2).replace(".", ",")}

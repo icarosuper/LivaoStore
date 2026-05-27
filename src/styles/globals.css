@@ -92,6 +92,7 @@
 @layer base {
 	html {
 		color-scheme: light only;
+		font-size: 112.5%;
 		font-family: var(--font-nunito), ui-sans-serif, system-ui, sans-serif,
 			"Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
 			"Noto Color Emoji";
