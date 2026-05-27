@@ -1,12 +1,29 @@
 "use client";
 
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import { OrdersTab } from "~/components/admin/orders-tab";
 import { ProductsTab } from "~/components/admin/products-tab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 
-export default function AdminPage() {
+const VALID_TABS = ["products", "orders"] as const;
+type TabValue = (typeof VALID_TABS)[number];
+
+function AdminTabs() {
+	const searchParams = useSearchParams();
+	const router = useRouter();
+
+	const raw = searchParams.get("tab");
+	const tab: TabValue = VALID_TABS.includes(raw as TabValue)
+		? (raw as TabValue)
+		: "products";
+
+	function handleTabChange(value: string) {
+		router.push(`?tab=${value}`, { scroll: false });
+	}
+
 	return (
-		<Tabs defaultValue="products">
+		<Tabs onValueChange={handleTabChange} value={tab}>
 			<TabsList className="w-full">
 				<TabsTrigger className="flex-1" value="products">
 					Produtos
@@ -22,5 +39,13 @@ export default function AdminPage() {
 				<OrdersTab />
 			</TabsContent>
 		</Tabs>
+	);
+}
+
+export default function AdminPage() {
+	return (
+		<Suspense>
+			<AdminTabs />
+		</Suspense>
 	);
 }
