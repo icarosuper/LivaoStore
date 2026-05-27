@@ -206,7 +206,7 @@ Quando o pedido tem `whatsapp` preenchido, exibe link clicável (verde) que abre
 | `components/admin/products-tab.tsx` | Aba de produtos do dashboard admin |
 | `components/admin/orders-tab.tsx` | Aba de pedidos do dashboard admin (filtros, paginação, status colorido) |
 | `components/admin/manual-order-dialog.tsx` | Dialog de criação de pedido manual pelo admin |
-| `components/admin/product-form.tsx` | Formulário reutilizado em criar/editar produto |
+| `components/admin/product-form.tsx` | Formulário reutilizado em criar/editar produto; upload de imagem via Supabase Storage (`product-images` bucket) |
 
 ---
 
