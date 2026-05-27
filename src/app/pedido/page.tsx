@@ -48,6 +48,10 @@ export default function PedidoPage() {
 
 	const total = items.reduce((s, i) => s + parseFloat(i.price) * i.quantity, 0);
 
+	const stockMap = new Map(
+		products?.map((p) => [p.id, p.availableStock]) ?? [],
+	);
+
 	useEffect(() => {
 		try {
 			const raw = localStorage.getItem("livao_cart");
@@ -55,6 +59,31 @@ export default function PedidoPage() {
 		} catch {}
 		setItemsLoaded(true);
 	}, []);
+
+	useEffect(() => {
+		if (itemsLoaded && !confirmed) {
+			localStorage.setItem("livao_cart", JSON.stringify(items));
+		}
+	}, [items, itemsLoaded, confirmed]);
+
+	function handleQuantityChange(productId: string, delta: number) {
+		setItems((prev) => {
+			const item = prev.find((i) => i.productId === productId);
+			if (!item) return prev;
+			const maxStock =
+				products?.find((p) => p.id === productId)?.availableStock ?? 0;
+			const newQty = item.quantity + delta;
+			if (newQty <= 0) return prev.filter((i) => i.productId !== productId);
+			if (newQty > maxStock) return prev;
+			return prev.map((i) =>
+				i.productId === productId ? { ...i, quantity: newQty } : i,
+			);
+		});
+	}
+
+	function handleRemoveItem(productId: string) {
+		setItems((prev) => prev.filter((i) => i.productId !== productId));
+	}
 
 	useEffect(() => {
 		if (reconciled || !itemsLoaded || !products) return;
@@ -197,19 +226,54 @@ export default function PedidoPage() {
 			)}
 
 			<div className="flex flex-col gap-3">
-				{items.map((item) => (
-					<div className="flex justify-between text-sm" key={item.productId}>
-						<span>
-							{item.quantity}x {item.name}
-						</span>
-						<span>
-							R${" "}
-							{(parseFloat(item.price) * item.quantity)
-								.toFixed(2)
-								.replace(".", ",")}
-						</span>
-					</div>
-				))}
+				{items.map((item) => {
+					const maxStock = stockMap.get(item.productId) ?? 0;
+					const itemTotal = parseFloat(item.price) * item.quantity;
+					const controlsDisabled = confirmed || createOrder.isPending;
+					return (
+						<div
+							className="flex items-center gap-2 text-sm"
+							key={item.productId}
+						>
+							<div className="flex items-center gap-1">
+								<button
+									aria-label={`Diminuir quantidade de ${item.name}`}
+									className="flex h-6 w-6 items-center justify-center rounded border leading-none disabled:opacity-40"
+									disabled={controlsDisabled}
+									onClick={() => handleQuantityChange(item.productId, -1)}
+									type="button"
+								>
+									−
+								</button>
+								<span className="w-6 text-center font-medium">
+									{item.quantity}
+								</span>
+								<button
+									aria-label={`Aumentar quantidade de ${item.name}`}
+									className="flex h-6 w-6 items-center justify-center rounded border leading-none disabled:opacity-40"
+									disabled={controlsDisabled || item.quantity >= maxStock}
+									onClick={() => handleQuantityChange(item.productId, 1)}
+									type="button"
+								>
+									+
+								</button>
+							</div>
+							<span className="flex-1 truncate">{item.name}</span>
+							<span className="shrink-0">
+								R$ {itemTotal.toFixed(2).replace(".", ",")}
+							</span>
+							<button
+								aria-label={`Remover ${item.name}`}
+								className="shrink-0 text-gray-400 hover:text-red-500 disabled:opacity-40"
+								disabled={controlsDisabled}
+								onClick={() => handleRemoveItem(item.productId)}
+								type="button"
+							>
+								✕
+							</button>
+						</div>
+					);
+				})}
 			</div>
 
 			<Separator className="my-4" />
@@ -234,6 +298,14 @@ export default function PedidoPage() {
 						{createOrder.isPending
 							? "Registrando pedido..."
 							: "Confirmar pedido"}
+					</Button>
+					<Button
+						className="mt-2 w-full"
+						disabled={createOrder.isPending}
+						onClick={() => router.push("/")}
+						variant="outline"
+					>
+						Voltar à loja
 					</Button>
 				</>
 			) : (
