@@ -38,6 +38,7 @@ export default function PedidoPage() {
 	const [modalPhoneError, setModalPhoneError] = useState("");
 	const [modalError, setModalError] = useState<string | null>(null);
 
+	const utils = api.useUtils();
 	const { data: products } = api.products.list.useQuery();
 	const createOrder = api.orders.create.useMutation();
 
@@ -120,9 +121,22 @@ export default function PedidoPage() {
 		if (parts.length > 0) setCartNotice(`${parts.join(" e ")}.`);
 	}, [products, items, itemsLoaded, reconciled]);
 
+	if (!itemsLoaded) {
+		return (
+			<main className="flex min-h-screen flex-col items-center justify-center p-8">
+				<p className="text-gray-500">Carregando...</p>
+			</main>
+		);
+	}
+
 	if (items.length === 0) {
 		return (
 			<main className="flex min-h-screen flex-col items-center justify-center gap-4 p-8">
+				{cartNotice && (
+					<div className="w-full max-w-sm rounded border border-amber-300 bg-amber-50 p-3 text-amber-800 text-sm">
+						{cartNotice}
+					</div>
+				)}
 				<p className="text-gray-500">Seu pedido está vazio.</p>
 				<Button onClick={() => router.push("/")}>Voltar à loja</Button>
 			</main>
@@ -152,6 +166,8 @@ export default function PedidoPage() {
 					? err.message
 					: "Erro ao registrar pedido. Tente novamente.";
 			setErrorMsg(msg);
+			setReconciled(false);
+			void utils.products.list.invalidate();
 		}
 	}
 
@@ -292,7 +308,7 @@ export default function PedidoPage() {
 					)}
 					<Button
 						className="mt-8 w-full"
-						disabled={createOrder.isPending}
+						disabled={createOrder.isPending || !reconciled}
 						onClick={handleConfirmClick}
 					>
 						{createOrder.isPending
