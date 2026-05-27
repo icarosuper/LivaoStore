@@ -21,7 +21,7 @@ interface Props {
 	onClose: () => void;
 }
 
-type Step = "phone" | "name" | "done";
+type Step = "phone" | "name" | "loading" | "done";
 
 export function InterestModal({
 	productId,
@@ -35,14 +35,25 @@ export function InterestModal({
 	const [name, setName] = useState("");
 	const [phoneError, setPhoneError] = useState("");
 
+	// eslint-disable-next-line react-hooks/exhaustive-deps
 	useEffect(() => {
-		if (open) {
+		if (!open) return;
+		setPhoneError("");
+		if (customer?.whatsapp && customer?.name) {
+			setPhone(customer.whatsapp);
+			setName(customer.name);
+			setStep("loading");
+			register.mutate({
+				productId,
+				customerName: customer.name,
+				whatsapp: customer.whatsapp,
+			});
+		} else {
 			setPhone(customer?.whatsapp ?? "");
 			setName("");
 			setStep("phone");
-			setPhoneError("");
 		}
-	}, [open, customer?.whatsapp]);
+	}, [open]);
 
 	const utils = api.useUtils();
 
@@ -55,6 +66,9 @@ export function InterestModal({
 		onSuccess: () => {
 			setStep("done");
 			void utils.interests.activeProductIds.invalidate();
+		},
+		onError: () => {
+			setStep("phone");
 		},
 	});
 
@@ -95,6 +109,14 @@ export function InterestModal({
 				<DialogHeader>
 					<DialogTitle>Quero esse item</DialogTitle>
 				</DialogHeader>
+
+				{step === "loading" && (
+					<div className="flex flex-col gap-4">
+						<p className="text-muted-foreground text-sm">
+							Registrando seu interesse em <strong>{productName}</strong>...
+						</p>
+					</div>
+				)}
 
 				{step === "phone" && (
 					<form className="flex flex-col gap-4" onSubmit={handlePhoneContinue}>
