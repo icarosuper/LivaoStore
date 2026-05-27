@@ -445,7 +445,10 @@ export function ProductsTab() {
 							disabled={addStock.isPending || addStockQty < 1}
 							onClick={() =>
 								addStockProductId &&
-								addStock.mutate({ id: addStockProductId, quantity: addStockQty })
+								addStock.mutate({
+									id: addStockProductId,
+									quantity: addStockQty,
+								})
 							}
 						>
 							{addStock.isPending ? "Salvando..." : "Confirmar"}
