@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { HeartSprite, LeafSprite, StarSprite } from "~/app/_components/sprites";
+import { CatSprite, HatSprite, MoonSprite, SparkleSprite } from "~/app/_components/sprites";
 import { CartBar } from "~/components/cart-bar";
 import { ProductCard } from "~/components/product-card";
 import { useCart } from "~/hooks/use-cart";
@@ -20,9 +20,9 @@ function StoreDivider() {
 				}}
 			/>
 			<div className="flex items-center gap-2">
-				<HeartSprite />
-				<StarSprite />
-				<LeafSprite />
+				<MoonSprite />
+				<SparkleSprite />
+				<HatSprite />
 			</div>
 			<div
 				className="h-0.5 max-w-20 flex-1"
@@ -119,7 +119,7 @@ export default function HomePage() {
 							letterSpacing: "-0.5px",
 						}}
 					>
-						Livão<span style={{ color: "#3d1f14" }}>Store</span> 🍰
+						🧙‍♀️ Doces da <span style={{ color: "#3d1f14" }}>Kiki</span> 🐱
 					</div>
 					<span
 						style={{
@@ -176,7 +176,7 @@ export default function HomePage() {
 
 			{/* Título da seção */}
 			<div className="mb-6 flex items-center justify-center gap-2">
-				<StarSprite />
+				<SparkleSprite />
 				<h1
 					style={{
 						fontFamily: "var(--font-baloo), cursive",
@@ -187,13 +187,13 @@ export default function HomePage() {
 				>
 					Nossos doces
 				</h1>
-				<StarSprite />
+				<SparkleSprite />
 			</div>
 
 			{/* Grade de produtos */}
 			{products && products.length === 0 ? (
 				<div className="flex flex-col items-center gap-3 py-20 text-[#c4907a]">
-					<span className="text-5xl">🍬</span>
+					<CatSprite />
 					<p className="font-bold text-[#3d1f14] text-lg">
 						Nenhum produto disponível no momento
 					</p>

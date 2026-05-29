@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import { CatSprite } from "~/app/_components/sprites";
 import { InterestModal } from "~/components/interest-modal";
 import { Button } from "~/components/ui/button";
 import type { CartItem } from "~/hooks/use-cart";
@@ -76,8 +77,8 @@ export function ProductCard({
 							src={product.imageUrl}
 						/>
 					) : (
-						<div className="flex h-full items-center justify-center text-5xl">
-							🍬
+						<div className="flex h-full items-center justify-center">
+							<CatSprite />
 						</div>
 					)}
 				</div>

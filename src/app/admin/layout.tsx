@@ -32,7 +32,7 @@ export default function AdminLayout({
 							color: "#d96c4a",
 						}}
 					>
-						Livão<span style={{ color: "#3d1f14" }}>Store</span>
+						🐱 Doces da <span style={{ color: "#3d1f14" }}>Kiki</span>
 					</span>
 					<span
 						style={{

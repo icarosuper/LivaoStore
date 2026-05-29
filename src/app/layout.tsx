@@ -7,8 +7,8 @@ import { WhatsAppFab } from "~/components/whatsapp-fab";
 import { TRPCReactProvider } from "~/trpc/react";
 
 export const metadata: Metadata = {
-	title: "Livão Store",
-	description: "Loja de doces artesanais",
+	title: "Doces da Kiki",
+	description: "Doces artesanais com encanto de bruxa",
 	icons: [{ rel: "icon", url: "/favicon.ico" }],
 };
 
