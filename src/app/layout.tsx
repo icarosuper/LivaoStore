@@ -9,7 +9,7 @@ import { TRPCReactProvider } from "~/trpc/react";
 export const metadata: Metadata = {
 	title: "Doces da Kiki",
 	description: "Doces artesanais com encanto de bruxa",
-	icons: [{ rel: "icon", url: "/favicon.ico" }],
+	icons: [{ rel: "icon", url: "/favicon.png" }],
 };
 
 const baloo = Baloo_2({
