@@ -5,7 +5,7 @@ import {
 	createTRPCRouter,
 	publicProcedure,
 } from "~/server/api/trpc";
-import { productInterests, products } from "~/server/db/schema";
+import { orderItems, productInterests, products } from "~/server/db/schema";
 
 export const productsRouter = createTRPCRouter({
 	list: publicProcedure
@@ -192,6 +192,12 @@ export const productsRouter = createTRPCRouter({
 		.input(z.object({ id: z.string().uuid() }))
 		.output(z.object({ id: z.string().uuid() }))
 		.mutation(async ({ ctx, input }) => {
+			await ctx.db
+				.delete(productInterests)
+				.where(eq(productInterests.productId, input.id));
+			await ctx.db
+				.delete(orderItems)
+				.where(eq(orderItems.productId, input.id));
 			const [deleted] = await ctx.db
 				.delete(products)
 				.where(eq(products.id, input.id))

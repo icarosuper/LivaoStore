@@ -62,6 +62,7 @@ export function ProductsTab() {
 	const [createOpen, setCreateOpen] = useState(false);
 	const [editProduct, setEditProduct] = useState<ProductRow | null>(null);
 	const [deleteId, setDeleteId] = useState<string | null>(null);
+	const [deleteTimer, setDeleteTimer] = useState(0);
 	const [interestProductId, setInterestProductId] = useState<string | null>(
 		null,
 	);
@@ -77,6 +78,21 @@ export function ProductsTab() {
 	const countMap = Object.fromEntries(
 		interestCounts?.map((c) => [c.productId, c.count]) ?? [],
 	);
+
+	useEffect(() => {
+		if (!deleteId) return;
+		setDeleteTimer(3);
+		const interval = setInterval(() => {
+			setDeleteTimer((t) => {
+				if (t <= 1) {
+					clearInterval(interval);
+					return 0;
+				}
+				return t - 1;
+			});
+		}, 1000);
+		return () => clearInterval(interval);
+	}, [deleteId]);
 
 	useEffect(() => {
 		const supabase = createSupabaseBrowserClient();
@@ -405,13 +421,21 @@ export function ProductsTab() {
 					<AlertDialogHeader>
 						<AlertDialogTitle>Excluir produto?</AlertDialogTitle>
 					</AlertDialogHeader>
+					<p className="text-muted-foreground text-sm">
+						Isso também excluirá todos os pedidos e interesses vinculados a este
+						produto. Esta ação não pode ser desfeita.
+					</p>
 					<AlertDialogFooter>
 						<AlertDialogCancel>Cancelar</AlertDialogCancel>
 						<AlertDialogAction
-							disabled={del.isPending}
+							disabled={del.isPending || deleteTimer > 0}
 							onClick={() => deleteId && del.mutate({ id: deleteId })}
 						>
-							{del.isPending ? "Excluindo..." : "Excluir"}
+							{del.isPending
+								? "Excluindo..."
+								: deleteTimer > 0
+									? `Excluir (${deleteTimer})`
+									: "Excluir"}
 						</AlertDialogAction>
 					</AlertDialogFooter>
 				</AlertDialogContent>
