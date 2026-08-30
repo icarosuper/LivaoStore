@@ -1,29 +1,99 @@
-# Create T3 App
+# Doces da Kiki
 
-This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
+Loja de doces artesanais: vitrine pública onde o cliente monta o pedido e um dashboard admin para gerir produtos e pedidos.
 
-## What's next? How do I make an app with this?
+Não há gateway de pagamento. O fluxo termina em **WhatsApp + Pix manual**: o cliente monta o carrinho, o pedido é salvo no banco e uma mensagem pré-formatada abre no WhatsApp da loja, com QR code Pix na tela.
 
-We try to keep this project as simple as possible, so you can start with just the scaffolding we set up for you, and add additional things later when they become necessary.
+## Stack
 
-If you are not familiar with the different technologies used in this project, please refer to the respective docs. If you still are in the wind, please join our [Discord](https://t3.gg/discord) and ask for help.
+Next.js 15 (App Router) · TypeScript · tRPC v11 · Drizzle ORM · Supabase (Postgres + Auth Magic Link + Storage) · Tailwind v4 · shadcn/base-ui · Vercel.
 
-- [Next.js](https://nextjs.org)
-- [NextAuth.js](https://next-auth.js.org)
-- [Prisma](https://prisma.io)
-- [Drizzle](https://orm.drizzle.team)
-- [Tailwind CSS](https://tailwindcss.com)
-- [tRPC](https://trpc.io)
+Gerado com `create-t3-app`.
 
-## Learn More
+## Como funciona
 
-To learn more about the [T3 Stack](https://create.t3.gg/), take a look at the following resources:
+**Cliente** (`/`)
+1. Vê os produtos ativos com estoque disponível. Badges indicam escassez ("Corra! Apenas 3 disponíveis") e reposição recente ("Voltou!", por 24h).
+2. Produto esgotado troca "Adicionar" por **"Quero esse item"** — modal pede nome + WhatsApp e registra demanda reprimida.
+3. Carrinho é estado local, persistido em `localStorage` (sem carrinho no banco).
+4. Em `/pedido`: resumo, total, QR code Pix e botão "Enviar pedido pelo WhatsApp". O pedido é gravado com `status = 'pending'` e o estoque é subtraído nesse momento, em transação com `SELECT ... FOR UPDATE`.
 
-- [Documentation](https://create.t3.gg/)
-- [Learn the T3 Stack](https://create.t3.gg/en/faq#what-learning-resources-are-currently-available) — Check out these awesome tutorials
+**Admin** (`/admin`, protegido por magic link)
+- **Produtos**: CRUD, upload de imagem (bucket `product-images` no Supabase Storage), ativar/desativar. Ao adicionar estoque, a leva de interessados é arquivada e cada um ganha um botão "Avisar" que abre o WhatsApp com mensagem pronta.
+- **Pedidos**: lista com itens detalhados; `pending → paid → delivered`. Cancelar devolve o estoque.
 
-You can check out the [create-t3-app GitHub repository](https://github.com/t3-oss/create-t3-app) — your feedback and contributions are welcome!
+A vitrine escuta Supabase Realtime em `products` e `orders` e revalida sozinha.
 
-## How do I deploy this?
+## Setup
 
-Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+Requer Node 20+ e pnpm.
+
+```bash
+pnpm install
+cp .env.example .env        # preencher (ver abaixo)
+pnpm db:migrate             # aplica o schema
+pnpm db:seed                # opcional: dados de teste (limpa antes de inserir)
+pnpm dev                    # http://localhost:3000
+```
+
+Banco: use um projeto Supabase ou suba um Postgres local com `./start-database.sh` (Docker/Podman).
+
+No Supabase, além do banco, é preciso:
+- habilitar **Auth → Magic Link** e liberar o e-mail do admin;
+- criar um bucket **público** chamado `product-images`.
+
+### Variáveis de ambiente
+
+Validadas em `src/env.js` — build falha se faltar alguma.
+
+| Variável | Para quê |
+|---|---|
+| `DATABASE_URL` | conexão Postgres (Drizzle) |
+| `NEXT_PUBLIC_SUPABASE_URL` | projeto Supabase |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | chave pública (auth + storage) |
+| `NEXT_PUBLIC_WHATSAPP_NUMBER` | número da loja, DDI+DDD sem formatação |
+| `NEXT_PUBLIC_PIX_CHAVE` | chave Pix do recebedor |
+| `NEXT_PUBLIC_PIX_NOME` | nome do recebedor no payload Pix |
+| `NEXT_PUBLIC_PIX_CIDADE` | cidade do recebedor no payload Pix |
+
+## Comandos
+
+```bash
+pnpm dev          # dev server (turbo)
+pnpm build        # build de produção
+pnpm start        # roda o build
+
+pnpm typecheck    # tsc --noEmit
+pnpm check        # biome (lint + format)
+pnpm check:write  # biome com correção automática
+
+pnpm db:generate  # gera migration a partir do schema
+pnpm db:migrate   # aplica migrations
+pnpm db:push      # push direto, só em dev
+pnpm db:studio    # Drizzle Studio
+pnpm db:seed      # popula dados de teste
+```
+
+## Estrutura
+
+```
+src/
+├── app/              rotas (App Router): / · /pedido · /admin · /admin/login
+├── components/       UI da vitrine, admin e primitivos shadcn em ui/
+├── hooks/            use-cart (localStorage) · use-customer (identidade sem login)
+├── lib/              pix · whatsapp · phone · clientes Supabase
+├── server/
+│   ├── api/routers/  products · orders · interests
+│   └── db/           schema Drizzle + seed
+└── middleware.ts     protege /admin
+```
+
+Idioma: **código e banco em inglês, texto de interface em português** — inclusive no admin.
+
+## Deploy
+
+Vercel. Configure as mesmas variáveis de ambiente no projeto e rode `pnpm db:migrate` apontando para o banco de produção antes do primeiro deploy.
+
+## Docs
+
+Documentação detalhada em [`docs/agents/`](docs/agents/): [features](docs/agents/features.md) · [architecture](docs/agents/architecture.md) · [database](docs/agents/database.md) · [auth](docs/agents/auth.md) · [conventions](docs/agents/conventions.md) · [decisions](docs/agents/decisions.md) · [design](docs/agents/design.md).
