@@ -1,99 +1,109 @@
-# Doces da Kiki
+# LivaoStore
 
-Loja de doces artesanais: vitrine pública onde o cliente monta o pedido e um dashboard admin para gerir produtos e pedidos.
+Production storefront for a small business: catalog, stock, checkout. No payment gateway — the flow ends in **WhatsApp + manual Pix**.
 
-Não há gateway de pagamento. O fluxo termina em **WhatsApp + Pix manual**: o cliente monta o carrinho, o pedido é salvo no banco e uma mensagem pré-formatada abre no WhatsApp da loja, com QR code Pix na tela.
+Live: **[livao-store.vercel.app](https://livao-store.vercel.app)**
+
+The customer builds a cart, the order is persisted, stock is reserved in a Postgres transaction (`SELECT … FOR UPDATE`), and a pre-filled WhatsApp message opens with a Pix QR code on screen. Admin is a magic-link dashboard. The storefront listens to Supabase Realtime on `products` and `orders` and revalidates itself.
+
+---
+
+## Table of Contents
+
+- [How it works](#how-it-works)
+- [Stack](#stack)
+- [Setup](#setup)
+- [Commands](#commands)
+- [Structure](#structure)
+- [Deploy](#deploy)
+
+---
+
+## How it works
+
+**Customer** (`/`)
+
+1. Sees active products with available stock. Badges mark scarcity ("Hurry! Only 3 left") and recent restock ("Back!", for 24h).
+2. Sold-out products swap "Add" for **"I want this"** — a modal takes name + WhatsApp and records unmet demand.
+3. Cart is local state, persisted in `localStorage` (no cart in the database).
+4. At `/pedido`: summary, total, Pix QR code, and "Send order via WhatsApp". The order is stored as `status = 'pending'` and stock is decremented in the same transaction, with `SELECT … FOR UPDATE`.
+
+**Admin** (`/admin`, magic-link)
+
+- **Products:** CRUD, image upload (Supabase Storage bucket `product-images`), enable/disable. Restocking archives the current waitlist and gives each person a "Notify" button that opens WhatsApp with a ready-made message.
+- **Orders:** list with line items; `pending → paid → delivered`. Cancel restores stock.
+
+UI copy is Portuguese (storefront and admin). Code and database are English.
 
 ## Stack
 
-Next.js 15 (App Router) · TypeScript · tRPC v11 · Drizzle ORM · Supabase (Postgres + Auth Magic Link + Storage) · Tailwind v4 · shadcn/base-ui · Vercel.
-
-Gerado com `create-t3-app`.
-
-## Como funciona
-
-**Cliente** (`/`)
-1. Vê os produtos ativos com estoque disponível. Badges indicam escassez ("Corra! Apenas 3 disponíveis") e reposição recente ("Voltou!", por 24h).
-2. Produto esgotado troca "Adicionar" por **"Quero esse item"** — modal pede nome + WhatsApp e registra demanda reprimida.
-3. Carrinho é estado local, persistido em `localStorage` (sem carrinho no banco).
-4. Em `/pedido`: resumo, total, QR code Pix e botão "Enviar pedido pelo WhatsApp". O pedido é gravado com `status = 'pending'` e o estoque é subtraído nesse momento, em transação com `SELECT ... FOR UPDATE`.
-
-**Admin** (`/admin`, protegido por magic link)
-- **Produtos**: CRUD, upload de imagem (bucket `product-images` no Supabase Storage), ativar/desativar. Ao adicionar estoque, a leva de interessados é arquivada e cada um ganha um botão "Avisar" que abre o WhatsApp com mensagem pronta.
-- **Pedidos**: lista com itens detalhados; `pending → paid → delivered`. Cancelar devolve o estoque.
-
-A vitrine escuta Supabase Realtime em `products` e `orders` e revalida sozinha.
+Next.js 15 (App Router) · TypeScript · tRPC v11 · Drizzle ORM · Supabase (Postgres + Magic Link + Storage) · Tailwind v4 · shadcn/base-ui · Vercel.
 
 ## Setup
 
-Requer Node 20+ e pnpm.
+Needs Node 20+ and pnpm.
 
 ```bash
 pnpm install
-cp .env.example .env        # preencher (ver abaixo)
-pnpm db:migrate             # aplica o schema
-pnpm db:seed                # opcional: dados de teste (limpa antes de inserir)
+cp .env.example .env        # fill in (see below)
+pnpm db:migrate             # apply schema
+pnpm db:seed                # optional: test data (wipes, then inserts)
 pnpm dev                    # http://localhost:3000
 ```
 
-Banco: use um projeto Supabase ou suba um Postgres local com `./start-database.sh` (Docker/Podman).
+Database: a Supabase project, or local Postgres via `./start-database.sh` (Docker/Podman).
 
-No Supabase, além do banco, é preciso:
-- habilitar **Auth → Magic Link** e liberar o e-mail do admin;
-- criar um bucket **público** chamado `product-images`.
+On Supabase, besides the database:
 
-### Variáveis de ambiente
+- enable **Auth → Magic Link** and allow the admin email;
+- create a **public** bucket named `product-images`.
 
-Validadas em `src/env.js` — build falha se faltar alguma.
+### Environment
 
-| Variável | Para quê |
+Validated in `src/env.js` — the build fails if any is missing.
+
+| Variable | Purpose |
 |---|---|
-| `DATABASE_URL` | conexão Postgres (Drizzle) |
-| `NEXT_PUBLIC_SUPABASE_URL` | projeto Supabase |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | chave pública (auth + storage) |
-| `NEXT_PUBLIC_WHATSAPP_NUMBER` | número da loja, DDI+DDD sem formatação |
-| `NEXT_PUBLIC_PIX_CHAVE` | chave Pix do recebedor |
-| `NEXT_PUBLIC_PIX_NOME` | nome do recebedor no payload Pix |
-| `NEXT_PUBLIC_PIX_CIDADE` | cidade do recebedor no payload Pix |
+| `DATABASE_URL` | Postgres connection (Drizzle) |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | public key (auth + storage) |
+| `NEXT_PUBLIC_WHATSAPP_NUMBER` | store number, country code + area, no formatting |
+| `NEXT_PUBLIC_PIX_CHAVE` | Pix key |
+| `NEXT_PUBLIC_PIX_NOME` | payee name in the Pix payload |
+| `NEXT_PUBLIC_PIX_CIDADE` | payee city in the Pix payload |
 
-## Comandos
+## Commands
 
 ```bash
 pnpm dev          # dev server (turbo)
-pnpm build        # build de produção
-pnpm start        # roda o build
+pnpm build        # production build
+pnpm start        # run the build
 
 pnpm typecheck    # tsc --noEmit
 pnpm check        # biome (lint + format)
-pnpm check:write  # biome com correção automática
+pnpm check:write  # biome, apply fixes
 
-pnpm db:generate  # gera migration a partir do schema
-pnpm db:migrate   # aplica migrations
-pnpm db:push      # push direto, só em dev
+pnpm db:generate  # migration from schema
+pnpm db:migrate   # apply migrations
+pnpm db:push      # push, dev only
 pnpm db:studio    # Drizzle Studio
-pnpm db:seed      # popula dados de teste
+pnpm db:seed      # test data
 ```
 
-## Estrutura
+## Structure
 
 ```
 src/
-├── app/              rotas (App Router): / · /pedido · /admin · /admin/login
-├── components/       UI da vitrine, admin e primitivos shadcn em ui/
-├── hooks/            use-cart (localStorage) · use-customer (identidade sem login)
-├── lib/              pix · whatsapp · phone · clientes Supabase
+├── app/              App Router: / · /pedido · /admin · /admin/login
+├── components/       storefront, admin, shadcn primitives in ui/
+├── hooks/            use-cart (localStorage) · use-customer (identity, no login)
+├── lib/              pix · whatsapp · phone · Supabase clients
 ├── server/
 │   ├── api/routers/  products · orders · interests
-│   └── db/           schema Drizzle + seed
-└── middleware.ts     protege /admin
+│   └── db/           Drizzle schema + seed
+└── middleware.ts     protects /admin
 ```
-
-Idioma: **código e banco em inglês, texto de interface em português** — inclusive no admin.
 
 ## Deploy
 
-Vercel. Configure as mesmas variáveis de ambiente no projeto e rode `pnpm db:migrate` apontando para o banco de produção antes do primeiro deploy.
-
-## Docs
-
-Documentação detalhada em [`docs/agents/`](docs/agents/): [features](docs/agents/features.md) · [architecture](docs/agents/architecture.md) · [database](docs/agents/database.md) · [auth](docs/agents/auth.md) · [conventions](docs/agents/conventions.md) · [decisions](docs/agents/decisions.md) · [design](docs/agents/design.md).
+Vercel. Set the same env vars on the project and run `pnpm db:migrate` against production before the first deploy.
